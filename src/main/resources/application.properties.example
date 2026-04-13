@@ -1,0 +1,21 @@
+spring.application.name=ACAI
+server.port=8080
+
+app.name=ACAI
+
+# DashScope config (Please fill in your own AliYun DashScope API keys and App IDs here)
+dashscope.api-key=YOUR_API_KEY_HERE
+dashscope.mql-app-id=YOUR_MQL_APP_ID_HERE
+dashscope.sql-app-id=YOUR_SQL_APP_ID_HERE
+dashscope.schemaLink-app-id=YOUR_SCHEMA_LINK_APP_ID_HERE
+dashscope.mqlTest-app-id=YOUR_TEST_MQL_APP_ID_HERE
+dashscope.sqlTest-app-id=YOUR_TEST_SQL_APP_ID_HERE
+dashscope.mqlNatSQL-app-id=
+dashscope.sqlNatSQL-app-id=
+
+# MySQL config (Please fill in your database credentials)
+db.host=localhost
+db.port=3306
+db.name=pms
+db.user=root
+db.password=YOUR_DB_PASSWORD_HERE
