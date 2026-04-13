@@ -12,9 +12,9 @@
 | C-01 | **只输出裸 JSON**，禁止 Markdown 代码块（```）、禁止任何解释文字 |
 | C-02 | 所有表名、列名必须来自【当前数据库 Schema】，不得凭空捏造 |
 | C-03 | 聚合函数必须显式声明（`count/sum/avg/max/min/count_distinct/none`） |
-| C-04 | `post_process.order_by` 只能引用 `target.metrics` 中已声明的 `alias` |
+| C-04 | `post_process.order_by` 只能引用 `target.metrics` 或 `dimensions` 中已存在的列（`expr` + `table_ref`）|
 | C-05 | 多表查询必须显式声明 `joins`（含 `join_type` 和 `on` 条件） |
-| C-06 | `having` 只能引用 `target.metrics` 中已声明的 `alias` |
+| C-06 | `having.conditions` 直接引用列（`expr`+`aggregation`+`table_ref`），不通过 alias |
 | C-07 | 仅当用户**明确要求**"前 N 个"/"最…"时才设置 `limit`，禁止擅自添加 |
 | C-08 | **【致命禁忌】** 严禁使用 Few-shot 示例（college_2）中的表名/列名。唯一世界观是用户传入的【当前数据库 Schema】 |
 | C-09 | **【SELECT最小化】** `target.metrics` 只放用户**明确要求看到的输出列**。GROUP BY 所需的主键/维度（如 Teacher_ID）只放 `dimensions`，**绝不**因为要 GROUP BY 就把它塞进 `target.metrics` |
@@ -22,6 +22,11 @@
 | C-11 | **【LIMIT 零默认】** `post_process.limit` 默认 `null`；只有问题出现"前N/Top N/第一/最…的一个"等**明确数量限制**时才填具体数字，禁止填 100、1000 等占位默认值 |
 | C-12 | **【精确匹配用 =】** 过滤条件中给出的是精确值（如 'math'、'USA'），`operator` 必须用 `=`；`like` 仅用于问题含"包含/以…开头/模糊"等语义时 |
 | C-13 | **【DISTINCT 按需声明】** `target.distinct` 默认 `false`；仅当问题含"不重复/唯一/各不相同"等**明确去重语义**时才设为 `true` |
+| C-14 | **【最小JOIN原则】** 只连接 SELECT 输出列或 WHERE 条件列所在的表。若某列在 primary_table 中直接存在，**禁止**为了该列再JOIN其他表。例：问题只问 `avg(death.injured)` 时，直接 `FROM death`，不得再 JOIN ship |
+| C-15 | **【ORDER BY 不含聚合】** `post_process.order_by` 的 `expr` 只填原始列名，**不填聚合函数**。"找最高分的那行" = `ORDER BY score DESC LIMIT 1`，而不是 `ORDER BY max(score)` |
+| C-16 | **【计行数用 `expr:"*"`】** 当问题只是计数行数（"how many X" / "how many total"）时，`target.metrics` 里必须写 `{"expr": "*", "aggregation": "count", "table_ref": "<主表>"}` 而非 `count(primary_key)` 或 `count(specific_col)` |
+| C-17 | **【GROUP BY 用属性列，不用主键】** `dimensions` 里只放问题中"按…分组"明确提到的**属性列**（如 first_name、country_code）。除非问题明确说"按 ID 分组"，**不要把主键自动加入 `dimensions`**。例：问题说"for each player show their name"→ GROUP BY name，不是 GROUP BY player_id |
+| C-18 | **【SELECT 列顺序与问题一致】** `target.metrics` 中列的顺序必须与问题中提到列的先后顺序一致。问题先提聚合（"count of courses and name"），聚合列排在前；问题先提普通列（"name and count of courses"），普通列排在前 |
 
 ---
 
@@ -98,9 +103,10 @@
   "post_process": {
     "order_by": [
       {
-        // 直接引用列表达式，不通过 alias
-        "expr": "<列名 或 *>",
-        "aggregation": "<count|sum|avg|max|min|none>",
+        // ⚠️ 只填列名，不含聚合函数！
+        // 正确："找最高分的那行" → {expr:score, table_ref:t, dir:desc} + limit:1
+        // 错误：{expr:score, aggregation:max, dir:desc}  ← 禁止！
+        "expr": "<列名>",
         "table_ref": "<表名>",
         "direction": "<asc|desc>"
       }

@@ -53,7 +53,15 @@ MQL (spider-ir/v1.0) 各个部分的详细翻译规则
 ### 3. 查询目标列与维度 (target & dimensions) -> `SELECT ...` 与 `GROUP BY ...`
 - **Distinct 控制**：如果 `target.distinct` 为 `true`，必须转化为 `SELECT DISTINCT`。
 - **SELECT 组装**：SELECT 提取出的列**仅仅由 `target.metrics` 决定**。绝对不要把 `dimensions` 里的列塞进 SELECT 里！
-  - v1.1 中 metrics 对象**没有 `alias` 字段**：`aggregation` 为 `none` 时直接输出 `<table_ref>.<expr>`；有聚合函数时输出 `<aggregation>(<table_ref>.<expr>)`。**全程严禁加 AS 别名**。
+  - v1.1 中 metrics 对象**没有 `alias` 字段**，翻译规则：
+    | `aggregation` 值 | `expr` 值 | 输出 SQL |
+    |---|---|---|
+    | `none` | 任意列名 | `<table_ref>.<expr>` |
+    | `count` | `*` | **`count(*)`** ← 直接输出，不加 table_ref |
+    | `count` | 具体列名 | `count(<table_ref>.<expr>)` |
+    | `sum`/`avg`/`max`/`min` | 任意列名 | `<agg>(<table_ref>.<expr>)` |
+    | **`count_distinct`** | 任意列名 | **`count(distinct <table_ref>.<expr>)`** ← 特殊展开！
+  - **全程严禁加 AS 别名**。
 - **GROUP BY**：`GROUP BY` 提取出的列**仅仅由 `dimensions` 决定**。如果有 `dimensions`，必须在其后附加 `GROUP BY <dimensions对象列举>`，将里面的维度对象转化为 `<table_ref>.<expr>` 格式。
 
 ### 4. 复杂过滤条件 (filters) -> `WHERE ...`
@@ -81,10 +89,9 @@ MQL (spider-ir/v1.0) 各个部分的详细翻译规则
   * 示例：`<枝干查询1 SQL> INTERSECT <枝干查询2 SQL>`
 
 ### 8. 排序与分页 (post_process) -> `ORDER BY ... LIMIT ...`
-- **排序**：v1.1 中 `order_by` 对象包含 `{expr, aggregation, table_ref, direction}`，直接展开：
-  - `aggregation` 为 `none` 时：`ORDER BY <table_ref>.<expr> <direction>`
-  - 有聚合时：`ORDER BY <aggregation>(<table_ref>.<expr>) <direction>`
-  - 示例：`{ "expr": "CID", "aggregation": "count", "table_ref": "e", "direction": "desc" }` → `ORDER BY count(e.CID) DESC`
+- **排序**：v1.1 中 `order_by` 对象只包含 `{expr, table_ref, direction}`，直接展开为 `ORDER BY <table_ref>.<expr> <direction>`。
+  - **永远不要**在 ORDER BY 中套用聚合函数（如 `max()`）〔除非 `dimensions` 非空且查询本身就是聚合的〕。
+  - 示例：`{ "expr": "winner_rank_points", "table_ref": "matches", "direction": "desc" }` → `ORDER BY matches.winner_rank_points DESC`
 - **分页**：只在 IR 明确写明具体的数值时才输出 `LIMIT <n>`。v1.1 已删除 `offset` 字段，任何情况都不得输出 `OFFSET`。
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
