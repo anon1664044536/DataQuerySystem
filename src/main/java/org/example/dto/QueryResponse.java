@@ -6,10 +6,12 @@ public record QueryResponse(
         boolean success,
         String message,
         String mql,
+        String subSchema,
         String sql,
         List<String> columns,
         List<List<String>> rows,
         long mqlMs,
+        long linkMs,
         long sqlMs,
         long dbMs,
         long totalMs

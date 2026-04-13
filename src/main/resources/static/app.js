@@ -224,13 +224,18 @@ function appendAssistantResult(summary, data) {
 
     const metrics = document.createElement("p");
     metrics.className = "bubble-metrics";
-    metrics.textContent = `MQL ${data.mqlMs ?? 0} ms | SQL ${data.sqlMs ?? 0} ms | DB ${data.dbMs ?? 0} ms | Total ${data.totalMs ?? 0} ms`;
+    metrics.textContent = `MQL ${data.mqlMs ?? 0} ms | Schema ${data.linkMs ?? 0} ms | SQL ${data.sqlMs ?? 0} ms | DB ${data.dbMs ?? 0} ms | Total ${data.totalMs ?? 0} ms`;
     bubble.appendChild(metrics);
 
     const mql = document.createElement("pre");
     mql.className = "bubble-code";
     mql.textContent = `MQL:\n${data.mql || "-"}`;
     bubble.appendChild(mql);
+
+    const schema = document.createElement("pre");
+    schema.className = "bubble-code";
+    schema.textContent = `Sub-Schema (DDL):\n${data.subSchema || "-"}`;
+    bubble.appendChild(schema);
 
     const sql = document.createElement("pre");
     sql.className = "bubble-code";

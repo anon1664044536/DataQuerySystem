@@ -46,6 +46,10 @@ public class DataManager {
         return get("SQL_APP_ID", "dashscope.sql-app-id", "");
     }
 
+    public static String schemaLinkAppId() {
+        return get("SCHEMA_LINK_APP_ID", "dashscope.schemaLink-app-id", "");
+    }
+
     public static String mqlTestAppId() {
         return get("MQL_TEST_APP_ID", "dashscope.mqlTest-app-id", "");
     }

@@ -1,0 +1,706 @@
+-- Q1: 统计大连供电公司总共有多少台设备数量？
+SELECT
+    COUNT(*)
+FROM power_sch.t_equipment_master_data t
+LEFT JOIN power_common.t_public_organization o ON t.management_org = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%';
+
+-- Q2: 大连供电公司记录的主变压器总数是多少？
+SELECT
+    COUNT(*)
+FROM power_sch.t_equipment_master_data t
+LEFT JOIN power_common.t_public_organization o ON t.management_org = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.equipment_type = '主变压器';
+
+-- Q3: 大连供电公司记录的断路器数量是多少？
+SELECT
+    COUNT(*)
+FROM power_sch.t_equipment_master_data t
+LEFT JOIN power_common.t_public_organization o ON t.management_org = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.equipment_type = '断路器';
+
+-- Q4: 大连供电公司目前拥有的无人机总数是多少？
+SELECT
+    COUNT(*)
+FROM power_sch.t_ast_wa_drone t
+JOIN power_sch.t_equipment_master_data e ON t.ast_id = e.id
+LEFT JOIN power_common.t_public_organization o ON e.management_org = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.deploy_state = '已部署';
+
+-- Q5: 查询2026年无人机状态表（t_ast_wa_drone）中的变更记录总数。
+SELECT
+    COUNT(*)
+FROM power_sch.t_ast_wa_drone t;
+
+-- Q6: 大连供电公司处于“已部署”状态的无人机数量是多少？
+SELECT
+    COUNT(*)
+FROM power_sch.t_ast_wa_drone t
+JOIN power_sch.t_equipment_master_data e ON t.ast_id = e.id
+LEFT JOIN power_common.t_public_organization o ON e.management_org = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.deploy_state = '已部署';
+
+-- Q7: 大连供电公司处于“测试中”状态的无人机记录有几条？
+SELECT
+    COUNT(*)
+FROM power_sch.t_ast_wa_drone t
+JOIN power_sch.t_equipment_master_data e ON t.ast_id = e.id
+LEFT JOIN power_common.t_public_organization o ON e.management_org = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.deploy_state = '测试中';
+
+-- Q8: 统计2026年全系统资产分类配置表（t_pa_asset_config）中的规则条数。
+SELECT
+    COUNT(*)
+FROM power_sch.t_pa_asset_config;
+
+-- Q9: 大连供电公司2026年零购项目计划表（pa_project_pl）中共有多少个项目？
+SELECT
+    COUNT(*)
+FROM power_sch.pa_project_pl t
+WHERE t.item_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.plan_year = '2026';
+
+-- Q10: 全系统计划年度为2026年的项目计划数量是多少？
+SELECT
+    COUNT(*)
+FROM power_sch.pa_project_pl t
+WHERE t.plan_year = '2026';
+
+-- Q11: 归属于大连供电公司的项目计划数量有几个？
+SELECT
+    COUNT(*)
+FROM power_sch.pa_project_pl t
+WHERE t.item_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+
+-- Q12: 归属于沈阳供电公司的项目计划数量有几个？
+SELECT
+    COUNT(*)
+FROM power_sch.pa_project_pl t
+WHERE t.item_org_name COLLATE utf8mb4_unicode_ci LIKE '%沈阳%'
+
+-- Q13: 大连供电公司计划总金额大于100万的项目有多少个？
+SELECT
+    COUNT(*)
+FROM power_sch.pa_project_pl t
+WHERE t.item_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.plan_total_sum > 1000000;
+
+-- Q14: 大连供电公司2026年项目计划的总采购数量（quantity求和）是多少？
+SELECT
+    SUM(t.quantity)
+FROM power_sch.pa_project_pl t
+WHERE t.item_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.plan_year = '2026';
+
+-- Q15: 统计大连供电公司包含“一次设备”的项目设备明细条数。
+SELECT
+    COUNT(*)
+FROM power_sch.pa_project_equip_pl e
+JOIN power_sch.pa_project_pl p ON e.item_id = p.item_id
+WHERE p.item_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND e.parent_type_id COLLATE utf8mb4_unicode_ci LIKE '%一次设备%';
+
+-- Q16: 统计辽宁省电力公司下属的公共组织机构节点总数。
+SELECT
+    COUNT(*)
+FROM pms.t_public_organization;
+
+-- Q17: 全系统中组织性质为“区县公司”的机构数量是多少？
+SELECT
+    COUNT(*)
+FROM middleground_public.t_public_organization t
+WHERE t.org_nature = '区县公司';
+
+-- Q18: 全系统中组织层级为2（地市级）的机构数量是多少？
+SELECT
+    COUNT(*)
+FROM pms.t_public_organization t
+WHERE t.org_level = '2';
+
+-- Q19: 查询2026年公共代码表中配置的代码字典总数。
+SELECT
+    COUNT(*)
+FROM middleground_public.t_public_commom_code;
+
+-- Q20: 标准类型为“VOLTAGE_LEVEL”的电压等级代码有多少个？
+SELECT
+    COUNT(*)
+FROM middleground_public.t_public_commom_code t
+WHERE t.standtype_code = 'VOLTAGE_LEVEL';
+
+-- Q21: 统计2026年厂家字典表中录入的制造商总数。
+SELECT
+    COUNT(*)
+FROM middleground_public.t_public_stdlib_manufacturer;
+
+-- Q22: 厂家名称中包含“股份”的制造商有多少家？
+SELECT
+    COUNT(*)
+FROM middleground_public.t_public_stdlib_manufacturer t
+WHERE t.name COLLATE utf8mb4_unicode_ci LIKE '%股份%';
+
+-- Q23: 大连供电公司目前登记在册的公共用户总数是多少？
+SELECT
+    COUNT(*)
+FROM pms.t_public_user u
+LEFT JOIN pms.t_public_organization o ON u.org_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%';
+
+-- Q24: 大连供电公司系统中的男性用户数量是多少？
+SELECT
+    COUNT(*)
+FROM pms.t_public_user u
+LEFT JOIN pms.t_public_organization o ON u.org_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND u.gender = '男性';
+
+-- Q25: 大连供电公司系统中的女性用户数量是多少？
+SELECT
+    COUNT(*)
+FROM pms.t_public_user u
+LEFT JOIN pms.t_public_organization o ON u.org_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND u.gender = '女性';
+
+-- Q26: 大连供电公司职称为“技师”的用户有多少人？
+SELECT
+    COUNT(*)
+FROM pms.t_public_user u
+LEFT JOIN pms.t_public_organization o ON u.org_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND u.title = '技师';
+
+-- Q27: 大连供电公司岗位为“班长”的用户总数是多少？
+SELECT
+    COUNT(*)
+FROM pms.t_public_user u
+LEFT JOIN pms.t_public_organization o ON u.org_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND u.post = '班长';
+
+-- Q28: 大连供电公司从事“带电作业”专业的人员有多少个？
+SELECT
+    COUNT(*)
+FROM pms.t_public_user u
+LEFT JOIN pms.t_public_organization o ON u.org_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND u.professional = '带电作业';
+
+-- Q29: 大连供电公司从事“变电运维”专业的人员有多少个？
+SELECT
+    COUNT(*)
+FROM pms.t_public_user u
+LEFT JOIN pms.t_public_organization o ON u.org_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND u.professional = '变电运维';
+
+-- Q30: 在大连供电公司中，名字叫“张建国”的用户有几名？
+SELECT
+    COUNT(*)
+FROM pms.t_public_user u
+LEFT JOIN pms.t_public_organization o ON u.org_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND u.user_name = '张建国';
+
+-- Q31: 大连供电公司在中台登记的主变压器资产有多少台？
+SELECT
+    COUNT(*)
+FROM middleground_ast.t_ast_tf_maintransformer t
+LEFT JOIN middleground_public.t_public_organization o ON t.maint_org = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.ast_id IS NOT NULL;
+
+-- Q32: 大连供电公司投运状态为“检修”的主变压器资产有多少台？
+SELECT
+    COUNT(*)
+FROM middleground_ast.t_ast_tf_maintransformer t
+WHERE t.deploy_state = '检修'
+  AND t.ast_id IN (
+    SELECT e.id
+    FROM power_sch.t_equipment_master_data e
+    LEFT JOIN power_common.t_public_organization o ON e.management_org = o.org_id
+    WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+      AND e.equipment_type = '主变压器'
+  );
+
+-- Q33: 大连供电公司电压等级为“220kV”的主变压器有多少台？
+SELECT
+    COUNT(*)
+FROM middleground_ast.t_ast_tf_maintransformer t
+LEFT JOIN power_common.t_public_organization o ON t.maint_org = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.voltage_level = '220kV';
+
+-- Q34: 大连供电公司2026年备品备件记录共有多少种？
+SELECT
+    SUM(t.spare_num)
+FROM middleground_ast.t_pa_spare_parts t
+WHERE t.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q35: 大连供电公司标记为“待报废”的备件有多少种？
+SELECT
+    SUM(t.spare_num)
+FROM middleground_ast.t_pa_spare_parts t
+WHERE t.spare_state = '待报废'
+  AND t.obj_id COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%';
+
+-- Q36: 大连供电公司属于“一次备件”类别的备件有多少条？
+SELECT
+    SUM(t.spare_num)
+FROM middleground_ast.t_pa_spare_parts t
+WHERE t.spare_category = '一次备件'
+  AND t.is_deleted = 0;
+
+-- Q37: 大连供电公司仓库中所有备件的总件数是多少？
+SELECT
+    SUM(t.spare_num)
+FROM middleground_ast.t_pa_spare_parts t
+WHERE t.is_deleted = 0;
+
+-- Q38: 大连供电公司2026年备件配额配置表共有多少条数据？
+SELECT
+    SUM(t.quota_num)
+FROM middleground_ast.pa_spare_quota_configure_pl t;
+
+-- Q39: 大连供电公司2026年备件领用设备明细共有多少次记录？
+SELECT
+    SUM(t.quantity)
+FROM middleground_ast.pa_spare_claim_equip_pl t
+WHERE t.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q40: 大连供电公司2026年备件试验设备表中有多少条试验记录？
+SELECT
+    COUNT(*)
+FROM middleground_ast.pa_spare_test_equip_pl t
+WHERE t.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q41: 大连供电公司备件试验结果为“不合格”的次数是多少？
+SELECT
+    COUNT(*)
+FROM middleground_ast.pa_spare_test_equip_pl t
+WHERE t.test_result = '不合格';
+
+-- Q42: 大连供电公司技术鉴定结论为“建议报废”的记录有多少条？
+SELECT
+    COUNT(*)
+FROM middleground_ast.pa_tech_appr_pl t
+WHERE t.appr_result = '建议报废'
+  AND t.obj_id LIKE '%大连供电公司%';
+
+-- Q43: 大连供电公司技术鉴定结论为“降级使用”的记录有多少条？
+SELECT
+    COUNT(*)
+FROM middleground_ast.pa_tech_appr_pl t
+WHERE t.appr_result = '降级使用'
+  AND t.obj_id COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%';
+
+-- Q44: 大连供电公司2026年列入退役计划的设备有多少台？
+SELECT
+    COUNT(*)
+FROM middleground_ast.t_ast_tf_maintransformer t
+JOIN middleground_ast.pa_remove_plan_equip_pl p ON t.ast_id = p.obj_id
+WHERE t.maint_org COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND p.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59'
+  AND t.deploy_state = '列入退役计划';
+
+-- Q45: 大连供电公司PSR表中共有多少条主变压器节点？
+SELECT
+    COUNT(*)
+FROM middleground_psr.t_psr_tf_maintransformer t
+WHERE t.obj_id COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%';
+
+-- Q46: 大连供电公司所有PSR主变压器节点的容量总和是多少？
+SELECT
+    SUM(t.capacity)
+FROM middleground_psr.t_psr_tf_maintransformer t;
+
+-- Q47: 大连供电公司PSR容量等于180MVA的主变压器有多少台？
+SELECT
+    COUNT(*)
+FROM middleground_psr.t_psr_tf_maintransformer t
+JOIN power_sch.t_equipment_master_data e ON t.obj_id = e.id
+LEFT JOIN power_common.t_public_organization o ON e.management_org = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND e.equipment_type = '主变压器'
+  AND t.capacity = 180;
+
+-- Q48: 大连供电公司变压器相位关联表中有多少条绑定关系？
+SELECT
+    COUNT(*)
+FROM middleground_psr.t_psr_tf_phase t;
+
+-- Q49: 大连供电公司备件领用数量大于3的记录有多少条？
+SELECT
+    COUNT(*)
+FROM middleground_ast.pa_spare_claim_equip_pl t
+WHERE t.quantity > 3;
+
+-- Q50: 大连供电公司备件配额数量大于50的配置项有多少条？
+SELECT
+    COUNT(*)
+FROM middleground_ast.pa_spare_quota_configure_pl t
+WHERE t.quota_num > 50;
+
+-- Q51: 大连供电公司PMS本地系统参数组的数量是多少？
+SELECT
+    COUNT(*)
+FROM pms.t_framework_system_param_group t;
+
+-- Q52: 大连供电公司PMS系统中配置了多少个业务菜单目录？
+SELECT
+    COUNT(*)
+FROM pms.t_framework_business_type t;
+
+-- Q53: 大连供电公司2026年停电申请单据共有多少条？
+SELECT
+    COUNT(*)
+FROM outage_apply t
+WHERE t.apply_work_stime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59'
+  AND t.deleted_state = 0;
+
+-- Q54: 大连供电公司计划停电（PLAN）类型的申请数量是多少？
+SELECT
+    COUNT(*)
+FROM outage_apply t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.outg_type = 'PLAN';
+
+-- Q55: 大连供电公司临时停电（TEMP）类型的申请数量是多少？
+SELECT
+    COUNT(*)
+FROM outage_apply t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.outg_type = 'TEMP';
+
+-- Q56: 大连供电公司状态为“审批通过”的停电申请数量是多少？
+SELECT
+    COUNT(*)
+FROM outage_apply t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.state = '审批通过';
+
+-- Q57: 大连供电公司2026年检修作业工单总数是多少？
+SELECT
+    COUNT(*)
+FROM pms.repair_work t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q58: 大连供电公司属于“变电”专业的检修工单有多少张？
+SELECT
+    COUNT(*)
+FROM pms.repair_work t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.professional_kind = '变电';
+
+-- Q59: 大连供电公司使用“第一种工作票”的检修工单有多少张？
+SELECT
+    COUNT(*)
+FROM repair_work t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.ticket_type = '第一种工作票';
+
+-- Q60: 大连供电公司2026年生成的工作票总数是多少？
+SELECT
+    COUNT(*)
+FROM work_ticket_public t
+WHERE t.city_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.deleted_state = 0;
+
+-- Q61: 大连供电公司通过“AI生成”方式产生的工作票数量有多少？
+SELECT
+    COUNT(*)
+FROM work_ticket_public t
+WHERE t.city_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.source_way COLLATE utf8mb4_unicode_ci LIKE '%AI生成%';
+
+-- Q62: 大连供电公司2026年倒闸操作方案共有多少个？
+SELECT
+    COUNT(*)
+FROM duty_reclosing_scheme t
+WHERE t.oper_start_time BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59'
+  AND t.deleted_state = 0;
+
+-- Q63: 大连供电公司2026年倒闸操作任务共有多少个？
+SELECT
+    COUNT(*)
+FROM duty_reclosing_task t
+WHERE t.oper_start_time BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59'
+  AND t.del_flag = 0;
+
+-- Q64: 大连供电公司2026年检修模块的日工作计划有多少份？
+SELECT
+    COUNT(*)
+FROM workticket_daily_workplan t
+WHERE t.plan_start_time BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59'
+  AND t.is_deleted = 0;
+
+-- Q65: 大连供电公司现场值班人员的签到记录有多少条？
+SELECT
+    COUNT(*)
+FROM pms.repair_duty_sign t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%';
+
+-- Q66: 大连供电公司2026年录入的检修方案有多少个？
+SELECT
+    COUNT(*)
+FROM repair_scheme t
+WHERE t.deleted_state = 0
+  AND t.plan_stime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q67: 大连供电公司属于“大修方案”的记录有多少条？
+SELECT
+    COUNT(*)
+FROM repair_scheme t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.scheme_type = '大修方案';
+
+-- Q68: 大连供电公司2026年归档的检修记录有多少条？
+SELECT
+    COUNT(*)
+FROM repair_record t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q69: 大连供电公司2026年作业规程文件共有多少份？
+SELECT
+    COUNT(*)
+FROM repair_proc_doc t
+WHERE t.city_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q70: 大连供电公司风险等级为“HIGH”的指导书有多少份？
+SELECT
+    COUNT(*)
+FROM repair_proc_doc t
+LEFT JOIN pms.t_public_organization o ON t.city_org_name = o.org_name
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.work_risk_level_code = 'HIGH';
+
+-- Q71: 大连供电公司2026年监控告警处置流水有多少次？
+SELECT
+    COUNT(*)
+FROM pms.tf_monitor_dispose_record t
+WHERE t.deal_time BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q72: 大连供电公司监控记录中标签为“越限告警”的有几条？
+SELECT
+    COUNT(*)
+FROM pms.tf_monitor_dispose_record t
+WHERE t.tag COLLATE utf8mb4_unicode_ci LIKE '%越限告警%';
+
+-- Q73: 大连供电公司2026年编排的带电作业计划有多少个？
+SELECT
+    COUNT(*)
+FROM live_plan_tr t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.is_deleted = 0;
+
+-- Q74: 大连供电公司2026年拆分出的带电作业任务有多少个？
+SELECT
+    COUNT(*)
+FROM live_worktask_tr t
+WHERE t.plan_task_date BETWEEN '2026-01-01' AND '2026-12-31';
+
+-- Q75: 大连供电公司2026年完成的现场勘察任务有多少次？
+SELECT
+    COUNT(*)
+FROM site_survey_work t
+WHERE t.plan_stime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q76: 大连供电公司2026年下发的巡视工作包总数是多少？
+SELECT
+    COUNT(*)
+FROM patrol_work t
+WHERE t.plan_stime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59'
+  AND t.deleted_state = 0;
+
+-- Q77: 大连供电公司属于“特殊巡视”的工作包有多少个？
+SELECT
+    COUNT(*)
+FROM patrol_work t
+LEFT JOIN t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.patrol_type COLLATE utf8mb4_unicode_ci LIKE '%特殊巡视%';
+
+-- Q78: 大连供电公司状态为“已完成”的巡视工作包有多少个？
+SELECT
+    COUNT(*)
+FROM patrol_work t
+LEFT JOIN t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.patrol_work_state = '已完成';
+
+-- Q79: 大连供电公司2026年巡视子任务总数是多少？
+SELECT
+    COUNT(*)
+FROM patrol_work_task t
+
+-- Q80: 大连供电公司登记在册的隐患缺陷记录共有多少条？
+SELECT
+    COUNT(*)
+FROM pms.ast_hazard_record t
+LEFT JOIN pms.t_public_organization o ON t.equipment_category = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%';
+
+-- Q81: 大连供电公司隐患状态为“待消缺”的记录有多少条？
+SELECT
+    COUNT(*)
+FROM pms.ast_hazard_record t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.state = '待消缺';
+
+-- Q82: 大连供电公司属于“输电”专业的隐患记录共有几条？
+SELECT
+    COUNT(*)
+FROM pms.ast_hazard_record t
+LEFT JOIN pms.t_public_organization o ON t.equipment_category = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.professional_kind = '输电运检';
+
+-- Q83: 大连供电公司2026年录入的故障停电分析报告有多少份？
+SELECT
+    COUNT(*)
+FROM fault_outage_analysis t
+LEFT JOIN pms.t_public_organization o ON t.fault_rec_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.obj_id BETWEEN '2026-01-01' AND '2026-12-31';
+
+-- Q84: 大连供电公司2026年编排的检测试验计划有多少个？
+SELECT
+    COUNT(*)
+FROM test_inspection_plan t
+WHERE t.is_deleted = 0;
+
+-- Q85: 大连供电公司状态为“已下达”的检测试验计划有多少个？
+SELECT
+    COUNT(*)
+FROM test_inspection_plan t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.plan_state = '已下达';
+
+-- Q86: 大连供电公司2026年检测周期计划记录数是多少？
+SELECT
+    COUNT(*)
+FROM test_period_plan t
+WHERE t.is_deleted = 0
+  AND t.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q87: 大连供电公司2026年试验结果数据共有多少份？
+SELECT
+    COUNT(*)
+FROM test_data_record t
+WHERE t.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q88: 大连供电公司状态为“已归档”的试验数据有多少份？
+SELECT
+    COUNT(*)
+FROM test_data_record t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.state = '已归档';
+
+-- Q89: 大连供电公司试验性质为“交接试验”的记录有几条？
+SELECT
+    COUNT(*)
+FROM test_data_record t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.test_nature_code = '交接试验';
+
+-- Q90: 大连供电公司试验专业为“油务化验”的记录有几条？
+SELECT
+    COUNT(*)
+FROM test_data_record t
+LEFT JOIN pms.t_public_organization o ON t.test_nature_code = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.major_code = '油务化验';
+
+-- Q91: 大连供电公司2026年试验数据设备关联关系有多少个？
+SELECT
+    COUNT(*)
+FROM test_data_equip t;
+
+-- Q92: 大连供电公司2026年试验项目位置扩展记录有多少条？
+SELECT
+    COUNT(*)
+FROM test_item_pos_expand t;
+
+-- Q93: 大连供电公司设备位置状态为“在运”的记录有多少条？
+SELECT
+    COUNT(*)
+FROM middleground_ast.t_ast_tf_maintransformer t
+WHERE t.deploy_state = '在运'
+  AND t.maint_org COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%';
+
+-- Q94: 大连供电公司2026年技改大修项目设备清单明细有多少个？
+SELECT
+    COUNT(*)
+FROM power_sch.pa_project_equip_pl e
+JOIN power_sch.pa_project_pl p ON e.item_id = p.item_id
+WHERE p.item_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND p.plan_year = '2026';
+
+-- Q95: 大连供电公司2026年建立的验收项目库有多少个？
+SELECT
+    COUNT(*)
+FROM pms.paw_project t
+WHERE t.obj_id COLLATE utf8mb4_unicode_ci LIKE '%大连%'
+  AND t.is_deleted = 0;
+
+-- Q96: 大连供电公司属于“主网基建验收”的项目数量有多少个？
+SELECT
+    COUNT(*)
+FROM power_sch.pa_project_pl t
+WHERE t.item_org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.professional_department = '主网基建验收';
+
+-- Q97: 大连供电公司2026年登记的验收遗留问题有多少个？
+SELECT
+    COUNT(*)
+FROM pms.paw_accp_question_info t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.ctime BETWEEN '2026-01-01 00:00:00' AND '2026-12-31 23:59:59';
+
+-- Q98: 大连供电公司已完成整改的验收问题有多少个？
+SELECT
+    COUNT(*)
+FROM pms.paw_accp_question_info t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.is_remediated = '已完成整改';
+
+-- Q99: 大连供电公司尚未完成整改的验收问题有多少个？
+SELECT
+    COUNT(*)
+FROM paw_accp_question_info t
+LEFT JOIN pms.t_public_organization o ON t.is_deleted = 0
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.is_remediated = '未完成整改';
+
+-- Q100: 大连供电公司验收问题中明确为“主变压器”的问题有几个？
+SELECT
+    COUNT(*)
+FROM pms.paw_accp_question_info t
+LEFT JOIN pms.t_public_organization o ON t.obj_id = o.org_id
+WHERE o.org_name COLLATE utf8mb4_unicode_ci LIKE '%大连供电公司%'
+  AND t.equip_type_name COLLATE utf8mb4_unicode_ci LIKE '%主变压器%';
+

@@ -95,8 +95,8 @@ def evaluate(ref_file, res_file):
 
 if __name__ == "__main__":
     # 文件路径配置
-    REFERENCE_FILE = "reference.txt"
-    RESULTS_FILE = "results.txt"
+    REFERENCE_FILE = "./reference.txt"
+    RESULTS_FILE = "./results.txt"
     
     # 确保存放这两个文件在同一目录下，或者修改上面的路径
     evaluate(REFERENCE_FILE, RESULTS_FILE)

@@ -12,7 +12,7 @@
 | 编号 | 规则 |
 |------|------|
 | C-01 | **只输出裸 JSON**，禁止 Markdown 代码块（```）、禁止任何解释性文字 |
-| C-02 | `metric` 和 `field` 的值**必须来自下方逻辑字段字典**，不得使用物理表名或列名 |
+| C-02 | `metric` 优先使用下方逻辑字典；若字典内没有匹配项（如各类计划、任务、报告名称），允许直接从用户问题原文中提炼“核心名词短语”作为 metric 值 |
 | C-03 | 聚合函数必须显式声明（`count/sum/avg/max/min`）|
 | C-04 | `post_process.order_by` 只能引用 `target.metrics` 或 `dimensions` 中已存在的 `metric`/`field` 名 |
 | C-05 | 若有 `dimensions`（按维度分组），必须显式列出 |
