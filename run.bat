@@ -1,33 +1,84 @@
 @echo off
-setlocal
+title ACAI Control Center
 
-if "%1"=="--test" (
-    echo [INFO] 启动测试脚本 (DatasetEvaluator)...
-    mvn compile exec:java -D"exec.mainClass=org.example.DatasetEvaluator"
-) else if "%1"=="--web" (
-    set "PORT=8082"
-    if not "%2"=="" set "PORT=%2"
+:menu
+cls
+echo ============================================================
+echo      ACAI Project - Multi-Stage NL2SQL Control Center
+echo ============================================================
+echo.
+echo   [1] Start Web Mode (Spring Boot + Chat UI)
+echo.
+echo   [2] PMS - Step 1: Java SQL Generation
+echo   [3] PMS - Step 2: Python Accuracy Report
+echo.
+echo   [4] Run Spider Dataset Evaluation
+echo   [5] Run NatSQL Benchmark
+echo   [6] Run Reference Builder Utility
+echo.
+echo   [x] Exit
+echo.
+echo ============================================================
+set /p choice="Please select an option (1-6, x): "
 
-    netstat -ano | findstr /R /C:":%PORT% " >nul
-    if %errorlevel%==0 (
-        echo [WARN] Port %PORT% is in use, trying 8083...
-        set "PORT=8083"
-        netstat -ano | findstr /R /C:":%PORT% " >nul
-        if %errorlevel%==0 (
-            echo [ERROR] Port 8083 is also in use. Please specify another port, e.g. run.bat --web 8084
-            exit /b 1
-        )
-    )
+if "%choice%"=="1" goto web
+if "%choice%"=="2" goto pms1
+if "%choice%"=="3" goto pms2
+if "%choice%"=="4" goto spider
+if "%choice%"=="5" goto natsql
+if "%choice%"=="6" goto ref
+if "%choice%"=="x" exit
+if "%choice%"=="X" exit
+goto menu
 
-    echo [INFO] 启动网页后端服务 (Spring Boot)...
-    echo [INFO] 使用端口: %PORT%
-    mvn spring-boot:run -D"spring-boot.run.arguments=--server.port=%PORT%"
+:web
+cls
+echo [INFO] Starting Web Backend (Spring Boot)...
+call mvn spring-boot:run
+pause
+goto menu
+
+:pms1
+cls
+echo [INFO] Running PMS Eval Step 1: Java SQL Generation...
+call mvn compile exec:java -D"exec.mainClass=org.example.DatasetEvaluator"
+echo.
+echo Process finished.
+pause
+goto menu
+
+:pms2
+cls
+echo [INFO] Running PMS Eval Step 2: Python Accuracy Report...
+if exist "dataset\evaluate.py" (
+    pushd dataset
+    python evaluate.py
+    popd
 ) else (
-    echo [ERROR] 无效参数或未提供参数！
-    echo.
-    echo ==============================
-    echo 使用方法：
-    echo run.bat --web [port]   (start web backend, default 8082; auto-fallback to 8083 if occupied)
-    echo run.bat --test  (运行所有的测试用例并生成 results.txt 和 usage.txt)
-    echo ==============================
+    echo [ERROR] File not found: dataset\evaluate.py
 )
+echo.
+echo Process finished.
+pause
+goto menu
+
+:spider
+cls
+echo [INFO] Running Spider Evaluation...
+call mvn compile exec:java -D"exec.mainClass=org.example.SpiderEvaluator"
+pause
+goto menu
+
+:natsql
+cls
+echo [INFO] Running NatSQL Benchmark...
+call mvn compile exec:java -D"exec.mainClass=org.example.NatSQLEvaluator"
+pause
+goto menu
+
+:ref
+cls
+echo [INFO] Running Reference Builder Utility...
+call mvn compile exec:java -D"exec.mainClass=org.example.ReferenceBuilder"
+pause
+goto menu
