@@ -4,6 +4,7 @@ target/
 !**/src/test/**/target/
 
 ### IntelliJ IDEA ###
+.idea
 .idea/
 .idea/modules.xml
 .idea/jarRepositories.xml
@@ -43,5 +44,7 @@ spider/
 
 
 ### userData ###
-src\main\resources\application.properties
+src/main/resources/application.properties
 
+论文
+src/main/resources/application.properties

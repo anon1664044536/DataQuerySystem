@@ -35,6 +35,10 @@ public class QueryService {
             // 1. NL2MQL
             long mqlStart = System.currentTimeMillis();
             mql = agent.getMQL(question.trim());
+            
+            // 校验 MQL 结构 (对应论文 3.5 节)
+            org.example.MqlValidator.validate(mql);
+            
             mqlMs = System.currentTimeMillis() - mqlStart;
 
             // 2. Schema Linking
@@ -45,7 +49,11 @@ public class QueryService {
 
             // 3. MQL2SQL
             long sqlStart = System.currentTimeMillis();
+            String sampleData = org.example.SchemaDataInjector.getSampleData(subSchema, sqlQuery);
             String combinedInput = "【原始业务问题查询】\n" + question.trim() + "\n\n【NL2MQL 提取的 IR JSON】\n" + mql + "\n\n【过滤后的子 Schema (DDL)】\n" + subSchema;
+            if (!sampleData.isEmpty()) {
+                combinedInput += "\n\n【相关表的部分数据样例】\n" + sampleData;
+            }
             sql = agent.getSQL(combinedInput);
             sqlMs = System.currentTimeMillis() - sqlStart;
 

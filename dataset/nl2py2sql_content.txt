@@ -1,0 +1,1228 @@
+Article
+FI-NL2PY2SQL: Financial Industry NL2SQL Innovation Model
+Based on Python and Large Language Model
+XiaozhengDu1,ShijingHu1,FengZhou2,* ,ChengWang3andBinhMinhNguyen4
+1 SchoolofComputerScience,FudanUniversity,Shanghai200438,China;xzdu23@m.fudan.edu.cn(X.D.);
+sjhu21@m.fudan.edu.cn(S.H.)
+2 SchoolofArtificialIntelligence,ShanghaiNormalUniversityTianhuaCollege,No.1661ShengxinNorth
+Road,Shanghai201815,China
+3 BusinessAnalysisBU,GienTechTechnologyCo.,Ltd.,Shanghai200232,China;cheng.wang32@gientech.com
+4 SchoolofInformationandCommunicationTechnology,HanoiUniversityofScienceandTechnology,No.1
+DaiCoViet,HaiBaTrung,Hanoi100000,Vietnam;minh.nguyenbinh@hust.edu.vn
+* Correspondence:zf.tony.sh@gmail.com
+Abstract: With the rapid development of prominent models, NL2SQL has made many
+breakthroughs,butcustomersstillhopethattheaccuracyofNL2SQLcanbecontinuously
+improvedthroughoptimization. Themethodbasedonlargemodelshasbroughtrevolu-
+tionarychangestoNL2SQL.ThispaperinnovativelyproposesanewNL2SQLmethod
+basedonalargelanguagemodel(LLM),whichcouldbeadaptedtoanedge-cloudcomput-
+ingplatform. First,naturallanguageisconvertedintoPythonlanguage,andthenSQLis
+generatedthroughPython. Atthesametime,consideringthetraceabilitycharacteristics
+offinancialindustryregulatoryrequirements,thispaperusestheopen-sourcebigmodel
+DeepSeek. AftertestingontheBIRDdataset,comparedwithmostNL2SQLmodelsbased
+on large language models, EX is at least 2.73% higher than the original method, F1 is
+atleast3.72higherthantheoriginalmethod,andVESis6.34%higherthantheoriginal
+method. Through this innovative algorithm, the accuracy of NL2SQL in the financial
+industryisgreatlyimproved,whichcanprovidebusinesspersonnelwitharobustdatabase
+accessmode.
+Keywords: LLM;NL2SQL;pre-training;prompt;Python
+AcademicEditor:PaoloBellavista
+Received:30October2024
+Revised:24December2024 1. Introduction
+Accepted:31December2024
+StructuredQueryLanguage(SQL)hasbecomethestandardlanguagefordatabase
+Published:2January2025
+querying,butitscomplexityposesabarrierfornon-technicalusers. TheNaturalLanguage
+Citation: Du,X.;Hu,S.;Zhou,F.;
+toStructuredQueryLanguage(NL2SQL)taskconvertsnaturallanguagequestionsinto
+Wang,C.;Nguyen,B.M.
+SQL,providingnon-specialistuserswithawaytointeractwithdatabases[1]. TheNL2SQL
+FI-NL2PY2SQL:FinancialIndustry
+problemcanbedefinedasfollows: givenanaturallanguagequeryandacorresponding
+NL2SQLInnovationModelBasedon
+PythonandLargeLanguageModel. databasetable,theNL2SQLmodelgeneratesanSQLstatement. EarlyNL2SQLtaskswere
+FutureInternet2025,17,12. https:// primarilybasedonrule-basedorpipelineapproachesanduseddomain-specific,simple
+doi.org/10.3390/fi17010012 datasets,makingreplicationchallenging. Inrecentyears,withthereleaseoflarge-scale
+Copyright:©2025bytheauthors. annotated datasets and the rapid development of deep learning and natural language
+LicenseeMDPI,Basel,Switzerland. processing (NLP) technologies, research in the NL2SQL field has garnered significant
+Thisarticleisanopenaccessarticle attention. Researchershaveproposedarangeofnewmethods,continuouslyadvancing
+distributedunderthetermsand
+thisfield. WithbreakthroughsinNLPduetodeeplearning,applyingthesemethodsto
+conditionsoftheCreativeCommons
+NL2SQLtaskshasyieldedpositiveresults[2].
+Attribution(CCBY)license
+In 2017, Salesforce introduced the large NL2SQL dataset WikiSQL [3], containing
+(https://creativecommons.org/
+licenses/by/4.0/). 80,654 query questions and their related SQL statements across 24,241 database tables.
+FutureInternet2025,17,12 https://doi.org/10.3390/fi17010012
+FutureInternet2025,17,12 2of24
+Manystudiesfollowed,aimingtoimprovetheaccuracyoftheWikiSQLdataset. TheSQL
+statementsinWikiSQLarerelativelysimple,mainlyinvolvingsingle-tablequeries.
+In2018,YaleUniversityreleasedtheSpiderdataset[4],anewNL2SQLdatasetpre-
+sentingahigherdifficultylevelthanWikiSQL.Spider,annotatedby11Yalestudents,is
+alarge-scale,complexcross-domainsemanticparsingandtext-to-SQLdataset. TheSpider
+challengeaimstodevelopnaturallanguageinterfacesforcross-domaindatabases. Itcon-
+tains10,181questionsand5693uniquecomplexSQLqueriesspanning200databasesand
+multipletablesacross138differentdomains. InSpider1.0,distinctcomplexSQLqueries
+anddatabasesappearinbothtrainingandtestingsets. Toperformwellonthisdataset,
+systemsmustgeneralizeeffectivelytonewSQLqueriesanddatabaseschemas.
+On28August2024, anearly-accessversionofSpider2.0(amorerealisticandchal-
+lengingtext-to-SQLtask)becameavailable. Spider2.0includes600real-worldtext-to-SQL
+workflowquestionsderivedfromenterprise-leveldatabaseusecases. Thedatabasesin
+Spider2.0comefromrealdataapplications,oftencontainingover1000columns,stored
+incloud-basedoron-premisedatabasesystemslikeBigQuery,Snowflake,orPostgreSQL.
+SolvingSpider2.0taskstypicallyrequiresunderstandingandsearchingthroughdatabase
+metadata, dialect documentation, and even project-level codebases. This challenge re-
+quiresmodelstointeractwithcomplexSQLworkflowenvironments, handleextensive
+context,performintricatereasoning,andgenerateSQLquerieswithmultipleoperations,
+oftenspanningover100lines,farexceedingtraditionaltext-to-SQLchallenges. Progress
+on Spider 2.0 represents a critical step toward developing LLM-based code agents that
+aremoreintelligentandautonomousinrealenterpriseenvironments. Withcontinuous
+improvementsindatasetsandtherapiddevelopmentoflargemodeltechnologies,many
+scholarsareusinglargemodelstoenhanceNL2SQLaccuracy.
+Data management in the financial industry has a history of over a decade. Many
+enterprises in the financial sector have established their own data platforms, applying
+dataextensivelyinrisk,finance,regulatory,andmarketingdomains,withdataplaying
+anincreasinglyimportantroleinrealbusinessscenarios[5]. Asdatabecomesaproduction
+factor,financialenterprisesplaceincreasingvalueondataassets. Reportshavetraditionally
+beenanimportantwaytodemonstratedata’sintrinsicvalue,yetfixedreportsareincreas-
+ingly insufficient for business needs. Business personnel require the ability to explore
+valuabledatafromcertaindatasetstosupportdecision-makingdirectlyandwishtocon-
+vertdatainsightsintobusinessvaluequickly. Traditionally,businessuserswouldsubmit
+datarequeststotheITdepartment. Techniqueexpertsdevelopthedatarequirementsand
+returnthedataresultstothebusinessusers. Anedge-cloudcomputingplatformcouldhelp
+tofinishit. Theprocesscantake1–2weeksatbestandupto1–2monthsatworst,severely
+impactingbusinessdecision-makingandsubsequentstrategies. Businessdatascientists
+mustupdatedataextractionrulesbasedonqueryresults,addingfurthercomplexity. This
+createsaneedforanedge-cloudcomputingplatformsystemwherebusinesspersonnelcan
+directlyusedatathroughnaturallanguage,asshowninFigure1. Here,businesspersonnel
+expressdatarequirementsinnaturallanguage,andtheNL2SQLengineconvertsitinto
+SQLtoaccessthedatabase. Theresultingdataisthenreturnedtothebusinesspersonnel.
+This significantly reduces communication costs, and if the data is unsuitable, business
+userscanquicklyadjusttheinputthemselvestoobtaindesiredresults,thusimproving
+data-drivendecision-makingefficiency.
+TheNL2SQLmodelisthecorecomponentoftheentirebusinessprocessandishighly
+anticipatedbyusersinthefinancialsector. Thefinancialindustryisknowledge-intensive,
+withbusinessusershavingmorestringentrequirementsforNL2SQLaccuracyandalower
+error tolerance than in other sectors. Traditional NL2SQL models are largely general-
+purposeandcross-industry,withfewmodelstailoredspecificallyforthefinancialindustry.
+FutureInternet2025,17,12 3of24
+Inthiscontext,thispaperproposesanovelNL2SQLconstructionapproachforthefinancial
+industry,highlightingthreekeyinnovations:
+• Afinancialsemanticdatamodelandaknowledgebaseforthefinancialindustrywere
+developedtoenhancethebigmodel’sunderstandingofthesectorthroughdatabase
+recallandtablelinking.
+• AninnovativeapproachwasintroducedfirsttoconvertnaturallanguageintoPython
+code and then convert that code into SQL. The model’s accuracy was improved
+throughcontinuousoptimizationanditerationduringthisintermediateprocess.
+Future Internet 2025, 17, x FOR PEER REVIE•W
+WetestedthisinnovativemethodontheBIRDdatasetandfoundthatitexceededmost
+3 of 24
+currentlypopularopen-sourcemodels.
+SELECTname,
+contact_info FROM
+customers WHEREage
+NL2SQL SQL
+BETWEEN18AND25
+ANDtotal_assets >
+1000000;
+Could you please help Sem anticLab Database Result
+m e check the list and
+contact inform ation of Cus_ID Name Phone
+our bank's clients aged 123 Zhangsan 16711124567
+between 18-25 with 324 Lisi 18592382923
+total assets of over 1 FinancialData
+…… ….. ……
+m illion? M odel
+433 Wangwu 18829837726
+FigureF ig1u. rTey1.pTiycpailc awlworokrkflflooww ddiiaaggrarmamof oNfL 2NSQLL2SaQppLli caaptiopnliscoantitohnese dogne- ctlhoue decdogmep-uctlionugdp lactofomrmp.uting plat-
+Businessusersgivethequery.NL2SQLenginetranslatestoSQLaccordingtosemanticlab,financial
+form. Business users give the query. NL2SQL engine translates to SQL according to semantic lab,
+datamodel,anddatabase.
+financial data model, and database.
+This paper consists of five sections. The Section 1 mainly describes the research
+Tbahcek gNroLu2nSdQoLfN mLo2SdQeLl ;itsh tehSee cctoiorne 2commaipnloyndeensctr oibfe tshthee ernesteiraerc bhustsaitnuessosf pNrLo2cSeQsLs aanndd is highly
+mainlydescribesthemainmethodsusedintheresearchprocessofthispaper;theSection3
+anticipated by users in the financial sector. The financial industry is knowledge-intensive,
+mainlydescribesthemethodproposedinthispaperandtheimplementationprocess;the
+with business users having more stringent requirements for NL2SQL accuracy and a
+Section4mainlydescribestheexperimentalprocessandcomparativeexperimentalresults
+lower error tolerance than in other sectors. Traditional NL2SQL models are largely gen-
+ofthemethodproposedinthispaper;theSection5summarizesthecontentofthispaper
+eral-paundrpdoesscer iabnesdf uctruoressre-isneadruchs.try, with few models tailored specifically for the financial
+industry. In this context, this paper proposes a novel NL2SQL construction approach for
+2. RelatedWork
+the financial industry, highlighting three key innovations:
+2.1. ResearchStatus
+•
+A financial semantic data model and a knowledge base for the financial industry
+Aftersignificantcontributionsfromnumerousexpertsandscholarsandalongperiod
+were developed to enhance the big model’s understanding of the sector through da-
+ofevolution,theNL2SQLfieldhasseenconsiderableprogress. Fromanalgorithmicper-
+tsapbecatsivee r,eNcLa2lSl QanLdm teathboldes lhinavkeinegvo. lvedthroughrule-basedapproaches,neuralnetwork-
+• Abans eidnnapopvraotaicvhee sa,ppprer-otraacinhe wdmaso idnetlsr,oadnudcleardg efilrasntg tuoa cgoenmvoedretl nsa(LtLuMrasl) ,laeancghupalagyei ningto Python
+auniqueroleinitsrespectiveera.
+code and then convert that code into SQL. The model’s accuracy was improved
+Rule-basedmethodsrelyonpredefinedrulesorsemanticparsers[6]. Forexample,
+through continuous optimization and iteration during this intermediate process.
+NaLIR[7]translatesnaturallanguagequeriesintoSQLwithaspecialparserandpredefined
+•
+We tested this innovative method on the BIRD dataset and found that it exceeded
+rules. However,therearealotoflimitationsinadaptability,scalability,andgeneralization,
+mmaoksitn gcuthrermendtilfyfi cpuoltptoualaprp loypberona-dsloy.uRrecsee amrcohdereslosv. ercometheselimitationswithneural
+networks. Advances in deep neural networks have driven progress in text-to-SQL [8],
+This paper consists of five sections. The Section 1 mainly describes the research back-
+automaticallylearningmappingsfromuserquestionstocorrespondingSQL.Somemodels
+ground of NL2SQL; the Section 2 mainly describes the research status of NL2SQL and
+employanencoderandencodemechanismtofinishNL2SQL.WithTransformer[9]and
+mainly describes the main methods used in the research process of this paper; the Section
+3 mainly describes the method proposed in this paper and the implementation process;
+the Section 4 mainly describes the experimental process and comparative experimental
+results of the method proposed in this paper; the Section 5 summarizes the content of this
+paper and describes future research.
+2. Related Work
+2.1. Research Status
+After significant contributions from numerous experts and scholars and a long pe-
+riod of evolution, the NL2SQL field has seen considerable progress. From an algorithmic
+perspective, NL2SQL methods have evolved through rule-based approaches, neural net-
+work-based approaches, pre-trained models, and large language models (LLMs), each
+playing a unique role in its respective era.
+Rule-based methods rely on predefined rules or semantic parsers [6]. For example,
+NaLIR [7] translates natural language queries into SQL with a special parser and prede-
+fined rules. However, there are a lot of limitations in adaptability, scalability, and gener-
+alization, making them difficult to apply broadly. Researchers overcome these limitations
+with neural networks. Advances in deep neural networks have driven progress in text-to-
+FutureInternet2025,17,12 4of24
+theSpiderdatasetcoming,neuralnetwork-basedmethodswininthefield[10]. Pre-trained
+languagemodels(PLMs),likeBERTandT5[11],becameanewparadigmfortext-to-SQL
+systems,demonstratingstate-of-the-artresultsonbenchmarkdatasets.
+TheriseofChatGPT,GPT-4,andGPT-4ohasprofoundlytransformedNL2SQLso-
+lutions,withLLM-basedmethodssignificantlyadvancingthefield[11]. Generally,LLM-
+based approaches involve either in-context learning (ICL) [12] or fine-tuning (FT) [13],
+achievinghighaccuracythroughcarefullydesignedframeworksandstrongercomprehen-
+sionthanPLMs. Forexample,DAIL-SQL[14]obtainedniceresultsontheSpiderdataset
+based on GPT-4. CHASE-SQL [15], which uses Gemini and prompt engineering, also
+achievedhighscoresontheBIRDdataset. FromNL2SQL’sevolution,wecanexpectLLM-
+andPLM-basedmethodstokeeponwinningthenextdecadeinthearea,withLLM-based
+methodsparticularlyfavoredbyresearchers. Therefore,understandingthecharacteristics
+oftheseapproachesisessential.
+ApplyingLLMstoNL2SQLtypicallyinvolvestwomainmethods: in-contextlearning
+andfine-tuningLLMs. In-contextlearningisatechniqueinwhichtheLLMperformstasks
+byprovidingcontextualexamples[16].Inthisapproach,themodeldoesnotrequireexplicit
+parameterupdatesorretrainingbutisinsteadguidedbydirectlysupplyingcontextual
+information for the task. This method leverages the latent abilities of large language
+modelslearnedfromlarge-scaledata,enablingthemtoinfertheappropriatetaskbasedon
+context[17]. Awell-designedpromptcouldhelpLLMstoworkefficiently. Representative
+promptingmethodsincludeRAG[18],few-shotlearning[19],andreasoning[20]. RAG
+involvesusinginputstoretrieverelevantandup-to-datedocumentsandthenconstructing
+prompts with the connected documents and inputs [21]. With RAG, LLMs can acquire
+recentknowledge,improveresponseinterpretability,andpartiallyavoidhallucinations.
+Few-shotlearningisamachinelearningmethodthataimstolearnnewtasksorclasseswith
+onlyafewtrainingsamples. Comparedtotraditionalmachinelearningmethods,which
+typicallyrequirelargeamountsoflabeleddata,few-shotlearningsignificantlyreducesdata
+needsandmaintainsgoodperformanceevenwithlimiteddata. Finally,researchershave
+discoveredLLM’sreasoningcapabilities[22],wherereasoningreferstoguidinganLLMto
+performmulti-stepreasoningthroughprompting. Thisapproachuseslanguagemodels
+to generate coherent, logical steps, helping complete complex tasks like mathematical
+problems,logicalreasoning,andcommon-sensequestions[23]. Thecoreofprompt-based
+reasoningisdesigningeffectivepromptstoguideLLMtothinkinstepsandderivecorrect
+answersratherthanrelyingsolelyondirectoutput.ThisallowstheLLMto“think”through
+certainproblemswithsequentialandlogicalreasoning.
+Additionally,newtechniquesworthnotingincludeCoT[24],Self-Consistency[25],
+ToT[26],RAP[27],ReAct[28],Self-Refine[29],Reflexion[30],andLATS[31].
+Another approach to applying LLMs is fine-tuning. Fine-tuning allows the model
+toachievegreateraccuracyandeffectivenessinspecificdomains. Thisprocessleverages
+thegenerallanguageknowledgeacquiredbythepre-trainedmodelandthenadjustsiton
+asmaller,domain-specificdataset. InNL2SQL,usinganin-contextlearningstrategydoes
+notinvolveoptimizingLLMparameters,treatingLLMsasready-madetools. However,if
+usershavelotsofcorporaorcomputingpowertoadjustLLMparameters,fine-tuningfor
+specificNL2SQLtaskscanimprovemodelperformanceandaccuracy. Fine-tuningtasks
+involvetwokeystages,pre-trainingandfine-tuning,expressedasfollows:
+LLM-New=FT(F-Ptrain(LLM,DS),SDS) (1)
+Inthepre-trainingphase,theLLMisadjustedonmanydatasets(DS)todevelopstrong
+comprehensionabilities. Then,thepre-trainedmodelisfurtherupdatedtoamorespecific
+dataset(SDS)closelyrelatedtothetask. Theprocessaimstodefinethemodel’sabilitiesto
+FutureInternet2025,17,12 5of24
+interpretandgenerateSQLmoreeffectivelyaccordingtoquestions. Fine-tuningaddresses
+privacychallenges,althoughitiscostlyduetothehighcomputationalrequirementsfor
+adjustingLLMparameters. Severalfine-tuningmethodsarepopular,suchasSFT,RLHF,
+andPEFT[32]. Thesemethodshavedifferentcharacteristicsandusagescenarios. Prompt
+tuningfocusesondesigningthemodelreasoningprocessratherthanmodifyingthemodel’s
+internalweightstructure[33].
+Due to hardware constraints and cost limitations, most current NL2SQL methods
+employin-contextmethods,withfewdirectlyfine-tuninglargemodels. Thetablebelow
+liststhetopfivemodelsinaccuracyontheBIRDandSpiderdatasets,whicharemainly
+based on in-context learning, particularly achieving good results with GPT-4, such as
+Table1.
+Table1. TopfivemodelsinaccuracyontheBIRDandSpiderdatasets. Theyarealmostbasedon
+LLMssuchasGPT-4orGTP-4o.ThescoresonSpiderarehigherthanonBIRD.
+EXExecutionwithValuesor
+Dataset Model Organizaiton
+ExecutionAccuracy(Test)
+Spider MiniSeek 91.2 Anonymous
+Spider DAL-SQL+GPT-4+Consistencey 86.6 AlibabaGroup
+Spider DAL-SQL+GPT-4 86.2 AlibabaGroup
+Spider DPG-SQL+GPT-4+Self 85.6 Anonymous
+Spider Din-SQL+GPT-4 85.3 UniversityofAliberta
+Bird CHASE-SQL+Gemini 73 GoogleCloud
+Bird AskData+GPT-4o 72.39 AT&T-CDO
+Bird OpenSearch-SQL+GPT-4o 72.28 AlibabaCloud
+Bird Distillery+GPT-4o 71.83 DistylAIResearch
+Bird ExSL+granite-34b-code 70.37 IBMResearchAI
+Previously,mostNL2SQLmethodsinvolvedlinkingpatternsorsemanticoptimization
+inclosed-sourcemodels,whichposesminimalissuesforotherindustriesbutsignificant
+risksforthefinancialsector. Financialregulationsrequiretraceableresultsandprohibit
+black-boxsituations,necessitatingopen-sourcemodels. Furthermore,thecomplexityoffi-
+nancialbusinessmakesitchallengingforstandardNL2SQLmodelstointerpretspecialized
+financialterminologyaccurately,complicatingnaturallanguage-to-SQLconversion. This
+paperaroseinresponsetothisneed.
+2.2. Preliminaries
+To better understand the content of this paper, a brief introduction to some key
+technologiesusedinthisstudyisprovidedbelow.
+2.2.1. DeepSeek
+Consideringtheuniquerequirementsofthefinancialindustry, thispaperusesthe
+open-sourcelargelanguagemodelDeepSeek. DeepSeekisapowerfulopen-sourcelarge
+language model (LLM) that excels in natural language processing (NLP), particularly
+in natural language-to-SQL tasks. The core architecture of DeepSeek draws from the
+LLaMAmodel,employinganautoregressiveTransformerdecoderarchitecture. Itutilizes
+Multi-HeadAttention(MHA)andGroupedQueryAttention(GQA)techniques,effectively
+enhancingthemodel’sperformanceandefficiency. DeepSeekistrainedfromscratchon
+anextensivedatasetcontainingtwotrillionChineseandEnglishtokens,givingitstrong
+FutureInternet2025,17,12 6of24
+bilingualprocessingcapabilities. TheDeepSeekmodelcanbeappliedtovariousscenarios,
+includingbutnotlimitedtoreal-timedataqueries,thecapabilityenhancementoftraditional
+BItools,andbasicdataminingandinsights.
+DeepSeek and LLaMA are currently popular open-source large language models
+withdistinctstrengthsandcharacteristics. DeepSeekinnovatesinitsmodelarchitecture,
+introducinganewMulti-HeadLatentAttention(MLA)architecture,whichsignificantly
+reducesmemoryusageandemploysaself-developedsparseMoEtechnologytoreduce
+computationalloadfurtherandimproveinferenceefficiency. DeepSeek-V2isfullyopen-
+sourceandcommerciallyavailable,followingtheMITopen-sourcelicense. DeepSeekV2.5
+demonstrates strong performance in Chinese comprehension (AlignBench), competing
+alongside several closed-source models. In summary, both DeepSeek and LLaMA are
+powerfullanguagemodelswiththeirrespectiveadvantages. DeepSeekshowsremarkable
+efficiencyincost,architecturalinnovation,andChineselanguageprocessing,whileLLaMA
+offersversatilityinmodelscalabilityandvalueforopen-sourceresearch. Developersand
+researcherscanchoosetheappropriatemodelbasedontheirneeds. Thispaperprimarily
+focusesonthefinancialChinesedomain,sotheDeepSeekV2.5modelwasselected.
+DeepSeek V2.5, developed by DeepSeek-AI, is an advanced AI model focused on
+generallanguagetasksandprogrammingapplications. Thisversionimprovesuponits
+predecessors,combiningnaturallanguageunderstandingandgenerationcapabilitieswith
+strong programming functionality. DeepSeek V2.5 features exceptional writing skills,
+enhanced instruction execution, and programming integration. It supports both local
+deploymentandcloud-basedusage,ensuringflexibilityfordifferentusers. Thispaperis
+basedonDeepSeekV2.5.
+2.2.2. PromptEngineering
+ThispaperleveragesDeepSeekandpromptengineeringtoenhancetheaccuracyof
+NL2SQL,utilizingpromptengineeringinboththeNL2PY(NaturalLanguagetoPython)
+andPY2SQL(PythontoSQL)components. Thelogicalflowchartofpromptengineering
+usedinthispaperisshowninFigure2. Itincludesthefoundationalarchitecture,supple-
+mentaryknowledge,sampleselection,andreasoningapproach. Consideringthespecifics
+of the financial industry, we have incorporated financial knowledge and financial data
+modelsintothesupplementaryknowledgesection. Thisgreatlyimprovesthemodel’sun-
+derstandingofthefinancialindustry’scharacteristicsandenhancesthematchingbetween
+databasetablesandChineselanguageinputs.
+ComparedwithdirectlyconvertingnaturallanguagetoSQL(NL2SQL),themethod
+ofconvertingnaturallanguagetoPythoncode(NL2PY)andthenconvertingPythoncode
+toSQL(PY2SQL)hasthefollowingadvantages: First,asageneralprogramminglanguage,
+Pythonhasmightyexpressivepowerandcanmoreflexiblyimplementcomplexbusiness
+logicandalgorithms,includingadvancedfeaturessuchasloops,conditionaljudgments,
+andfunctions. Second,Pythonhasawealthofthird-partylibrariesandmodules,which
+facilitatesdataprocessingandanalysisandimprovesthereusabilityandmaintainability
+ofthecode. Inaddition,Python’sdebuggingandtestingtoolsaremorecomplete,which
+isconvenientfordeveloperstoverifythecodeandtroubleshooterrors. Thelimitations
+of NL2SQL are mainly reflected in the following aspects: First, it is difficult to directly
+expresscomplexlogicandalgorithms,especiallywhenitinvolvesmulti-tableassociations,
+nestedqueries,ordynamiccalculations. Second,thegeneratedSQLstatementsmaybe
+toocomplexandneedbetterstructureandreadability,whichchallengesthemaintenance
+andunderstandingofthecode. Third,SQLlacksadvanceddataprocessingcapabilities
+andflexibleerrorhandlingmechanismsandcannotintegratevariousdatasourcesand
+processing processes as quickly as Python. Finally, SQL debugging tools are relatively
+FutureInternet2025,17,12 7of24
+Future Internet 2025, 17, x FOR PEER REVIEW 7 of 24
+scarce,anditisnoteasytodebugcomplexqueries. Insummary,themethodofNL2PYand
+of NL2PY and then PY2SQL can fully utilize the advantages of Python, make up for the
+thenPY2SQLcanfullyutilizetheadvantagesofPython,makeupfortheshortcomingsof
+shortcomings of NL2SQL, and better meet complex business needs.
+NL2SQL,andbettermeetcomplexbusinessneeds.
+Figure2. NL2SQLprompt inthefinanceindustry. Weconsiderbasicstructure, supplementary
+Figure 2. NL2SQL prompt in the finance industry. We consider basic structure, supplementary
+knowledge,exampleselection,andreasoning.ThesepromptsprovidevaluablehintsforLLMs.
+knowledge, example selection, and reasoning. These prompts provide valuable hints for LLMs.
+2.2.3. Pandas
+2.2.3. Pandas
+Pandasisanopen-sourcePythondataanalysislibrarythatoffershigh-performance,
+userP-farniednads liys danat oapsetrnu-scotuurrecse aPnydthaonna ldyastias atonoallsy.sTish leibmraariyn tdhaatt aosffterrusc htuigrehs-pinerPfoarnmdaanscaer,e
+utsheer-Sferireinesd(lya odnaeta-d sitmruecntusiroensa alnadrr aanya)laynsdis tthoeolDs.a TtahFer ammaein( adtawtao -sdtriumcetunrseios ninal Ptaabnldea),s baorteh
+thdee sSigernieeds (tao omnaek-deimdaetnasmioannailp aurrlaatyio) nansdim thpele D,ianttauFirtaivmee, a(na dtwefofi-cdiiemnet.nTsihoenaSle rtaiebsleis), abootnhe -
+ddeismigennesdio tnoa mldaaktea dsatrtua cmtuarneipcounlatatiionnin sgimanpyled, ianttautiytipvee,, sauncdh eaffiscinietnegt.e Trsh,es tSreinrigess, ifls oaa otsn,eo-r
+dPimytehnosnioonbajelc dtsa,taan sdtrruescetumrbe lecosnatsaiinnginlegc oalnuym dnaotaf dtyaptae., TshuechD aatsa iFnrtaemgeeriss, asttrwinog-ds,i mfloenatssio, noar l
+Pdyathtaonst roubcjetuctrse,, aenssde nretsiaelmlybalesta ab lseinmglaed ceoulupmonf mofu dltaitpal.e TSheer iDesa,tsaiFmrailmare tios aan twEoxc-delimsheene-t
+soiornSaQl Ldatatab lset.ruPcatnudrea,s epsrsoevnitdiaelslyr iach tadbaltea mmaadnei puupla otifo mnufultnipctlieo nSearliiteise,s s,iimncilluard itnog afinl tEexrcinegl ,
+sshoeretti nogr, SmQeLrg tianbgl,eg. Proaunpdiansg p,arnovdidagegs rreigchat dinagta. Imtsaunpippuorlatsticoonm fupnlecxtidoantaaliotipeesr, ainticolnusd,isnugc hfila-s
+tetirminegs, esroiretsinagn,a mlyesrisg,inwgi,n gdroowupfiunngc,t aionnds a,agngdrergoaltliinngg. sItta stuisptipcos.rts complex data operations,
+such aPsa tnimdaes searliseos ainnacllyusdise,s wvinadrioowus futnocotlisonfso,r anhda nrodllliinngg smtaitsisstinicgs. data, outliers, and
+dupPliacnatdeass— aclosom imncolnudtaessk vsairnioduast atocollesa nfoinr gh.anItdclianng immpisosirntgd adtaatafr, oomutlmieurslt, ipanleds douurpclei-s,
+ciantcelsu—dcinogmCmSoVn, tEaxskces li,nS dQaLtad caletaanbiansge.s I,ta cnadn iJmSOpNor,t adnadta efxropmor mt dualttiaplteo stohuersceesfo, irnmclautsd.inAgs
+CoSnVe, oEfxtcheel, cSoQreL ldibartaarbiaesseisn, athned PJSyOthNo,n adndat eaxspcoiernt cdeateac otos ythsteesme f,oPramnadtas.s Awso ornkes oinf tchoen cjuornec -
+litbioranrwiesit hinl tibhrea Priyetshloikne dNatuam scPieyn,Sceci ePcyo,sMysattepmlo, tPliabn,danasd wScoirkkist- ilnea cronntjounocftfieorna wroitbhu lsitbtroaorileksi t
+lifkoer NdautmaPany,a SlycsiPisy,,c Mleaantpinlogt,livbi, saunadli zSacitkioitn-,leaanrnd tmo aocffheirn ea rleoabrunsitn tgo.olIknitt hfoisr dpaatpae ar,nwaleyseims, -
+cplelaonyinPga,n vdiasusamlizeathtioodns, afonrd dmaatachminaen liepaurnlaitniogn. I,nc othnitsi npuaopuers,l ywoe petmimpilzoiyn gPatnhdeams mbaestehdodosn
+fodrif dfeartean mtsacneinpaurliaotsi.on, continuously optimizing them based on different scenarios.
+22.2.2.4.4. .FFininaanncciaial lInIndduusstrtryy DDaatata MMooddeel laanndd CCoorrppuuss
+AA fifinnaanncciaial lddaatata mmooddeel lisis aa ssttrruuccttuurreedd rreepprreesseenntatatitoionn oof fccoommmmoonn ttaabbleless aanndd fifieeldldss
+uusseedd inin ththee fifinnaanncciaial lsseecctotor,r ,ddeessigignneedd ththrroouugghh bbuussinineessss aabbsstrtraacctitoionn toto ccaapptuturree ooppeerraatitoionnaal l
+rreeaaliltitieiess. .UUssiningg eenntittiyty-r-reelalatitoionnsshhipip ddiaiaggrraammss, ,ththisis mmooddeel lrreeflfleecctsts vvaarrioiouuss fifinnaanncciaial lbbuussinineessss
+sscceennaariroioss. .DDrarwawinign gono yneyaersa rosf ofifnfianncainacl isaelcstoecr tdoervdeelovpelmopenmt,e tnhti,st phaisppera pbuerildbsu ioldn sthoen Tteh-e
+rTaedraatdaa FtaS-FLSD-LMD Mto etonhenanhacen cae caocmopmrpehreehnesnivseiv, ee,netnetreprrpisreis-ele-lveevle dladtaat ammododele ltatialioloreredd fofor rththee
+fifinnaanncciaial linindduusstrtryy,, ccoovveerriinngg aapppprrooxxiimmaatteellyy 8800%% ooff bbaannkkiinngg bbuussiinneessss ddaattaa..
+Future Internet 2025, 17, x FOR PEER REVIEW 8 of 24
+FutureInternet2025,17,12 8of24
+The model comprises ten themes: Party, Product, Agreement, Event, Asset, Finance,
+Themodelcomprisestenthemes: Party,Product,Agreement,Event,Asset,Finance,
+Institution, Region, Marketing, and Channel. Key themes like Customer, Agreement,
+Institution, Region, Marketing, and Channel. Key themes like Customer, Agreement,
+Event, Asset, and Finance are central to the model and are supported by rich data sources
+Event,Asset,andFinancearecentraltothemodelandaresupportedbyrichdatasources
+and references in the source systems. The goal is to ensure completeness and richness,
+and references in the source systems. The goal is to ensure completeness and richness,
+adding custom data elements unique to banks where necessary. Non-core themes such as
+addingcustomdataelementsuniquetobankswherenecessary. Non-corethemessuchas
+Applications, Marketing Activities, Channels, Institutions, and Products generally have
+Applications,MarketingActivities,Channels,Institutions,andProductsgenerallyhave
+minimal data sources or references. The objective here is to maintain structural integrity
+minimaldatasourcesorreferences. Theobjectivehereistomaintainstructuralintegrity
+and scalability, with adjustments as needed over time.
+andscalability,withadjustmentsasneededovertime.
+Most financial institutions’ data platforms are designed following enterprise-level
+Mostfinancialinstitutions’dataplatformsaredesignedfollowingenterprise-leveldata
+data models, as providing a predefined data model can enhance a large model’s under-
+models,asprovidingapredefineddatamodelcanenhancealargemodel’sunderstanding
+standing of financial industry database tables and fields, ultimately improving NL2SQL’s
+offinancialindustrydatabasetablesandfields,ultimatelyimprovingNL2SQL’saccuracy.
+accuracy. The financial data model includes tables, columns, foreign key relationships,
+The financial data model includes tables, columns, foreign key relationships, and code
+and code tables. Tables represent business entities and their relationships, with each table
+tables. Tablesrepresentbusinessentitiesandtheirrelationships,witheachtablehaving
+having both Chinese and English names and interconnected relationships. Column names
+bothChineseandEnglishnamesandinterconnectedrelationships. Columnnamesand
+and data types are clearly defined, allowing customization to fit specific needs. The pri-
+datatypesareclearlydefined,allowingcustomizationtofitspecificneeds. Theprimary
+mary and foreign keys determine the relationship between tables.
+andforeignkeysdeterminetherelationshipbetweentables.
+Additionally, the model includes code tables to store commonly used codes in the
+Additionally, themodelincludescodetablestostorecommonlyusedcodesinthe
+financial industry. For example, gender may include male and female, while birthplace
+financialindustry. Forexample,gendermayincludemaleandfemale,whilebirthplace
+lists all provinces in the country.
+listsallprovincesinthecountry.
+Considering the financial sector’s unique characteristics, this paper establishes a fi-
+Consideringthefinancialsector’suniquecharacteristics,thispaperestablishesafinan-
+nancial industry corpus consisting of 12 types of financial sector-specific language re-
+cialindustrycorpusconsistingof12typesoffinancialsector-specificlanguageresources,
+sources, as illustrated. These resources help large models better understand financial nat-
+asillustrated. Theseresourceshelplargemodelsbetterunderstandfinancialnaturallan-
+ural language’s linguistic characteristics and meanings, supporting improved comprehen-
+guage’slinguisticcharacteristicsandmeanings,supportingimprovedcomprehensionof
+sion of business users’ requirements, such as Figure 3
+businessusers’requirements,suchasFigure3
+Figure3.Financialindustrycorpusdiagram.Itincludesalmostalltypesoffinancialcorpus,suchas
+Figure 3. Financial industry corpus diagram. It includes almost all types of financial corpus, such as
+regulations,financialnews,marketanalysis,etc.
+regulations, financial news, market analysis, etc.
+3. ModelDesignandImplementation
+3. Model Design and Implementation
+This section mainly describes the proposed method structure of NL2PY2SQL, Pre-
+This section mainly describes the proposed method structure of NL2PY2SQL, Pre-
+Processing,NL2PYandRevisePython,NL2SQLandReviseSQL,andPost-Processing.
+Processing, NL2PY and Revise Python, NL2SQL and Revise SQL, and Post-Processing.
+3.1. OverviewofFI-NL2PY2SQL
+3.1. Overview of FI-NL2PY2SQL
+The overall workflow of this model is illustrated in the diagram, which includes
+Pre-TPhroe coevsesrinalgl ,wNoLrk2flPoYw( Nofa tthuirsa ml Loadnegl uisa iglleustotraPtyedth ionn t)h,eP dYi2aSgQraLm(,P wyhthicohn intocluSQdeLs) ,Paren-d
+PProocset-sPsrinogce, sNsiLn2gP.YFi r(sNt,awtueraplr eLparnogcuesasgteh teoq Puyetrhyoqnu)e, sPtiYo2nSsQ,eLv i(dPeynthceo,nd taota SbQasLe),i nafnodrm Paotsiot-n,
+Pfironcaenscsiianlgd. aFtiarsmt,o wdeel sp,raenpdroficnesasn cthiael cqoureproyr aqutoesitdioenntsi,f yevpiodteenncteia, lddaatatabbaassee itnafbolrems.aNtioexnt,, fiw-e
+ncaonncviaelr tdnataat umraoldlaelnsg, uaangde fitnoaPnyctihaol ncocropdoerau stoin igdpenrotimfyp pt-obtaesnetdiaml deathtaobdassaen tdabDleese.p NSeeexkt,. wThe e
+coPnyvtheortn ncaotdueraisl tlhaennguitaegraet itvoe lPyyothpotinm iczoeddeb uassiendgo pnrdoamtapbta-bsaesaendd msaemthpoldesi nafnodrm DateieopnS.eWekit.h
+Tthhee PPyytthhoonn -cgoednee irsa tthedenc oitdereaatinvdeldya otapbtiamseizkendo bwalseeddg oen,S dQaLtaibsagseen aenrda tseadmupslien ginPforormmapttioann.d
+WDiethe ptSheee kP,yatnhdonth-geeSnQerLatqeude rcieosdae reancodn tdinatuaablalysee xkencouwteldedagned, rSeQfinLe disb ygetnroeurabtleeds huosoitningg
+Pirsosmuepst. aFninda lDlye,etphSeeeenkt, iraendSQ tLhei sSvQaLli dqauteerdieasg aarine sctocnhteinckupaolliyn tesxaencudtethde nanodu trpeufitnteedd .bAy s
+showninFigure4.
+Future Internet 2025, 17, x FOR PEER REVIEW 9 of 24
+Future Internet 2025, 17, x FOR PEER REVIEW 9 of 24
+troubleshooting issues. Finally, the entire SQL is validated against checkpoints and then
+toruotupbulttesehdo. oAtisn sgh ioswsune isn. FFiingaulrlye ,4 t.h e entire SQL is validated against checkpoints and then
+FutureInternet2025,17,12 9of24
+outputted. As shown in Figure 4.
+Figure 4. Overview pipeline of FI-NL2PY2SQL. It shows the model process, from data to final SQ L
+Figure 4. Overview pipeline of FI-NL2PY2SQL. It shows the model process, from data to final
+oFuigtupruet .4 . Overview pipeline of FI-NL2PY2SQL. It shows the model process, from data to final SQL
+SQLoutput.
+output.
+As shown in Figure 5, the input data mainly includes natural language queries and
+AsshowninFigure5,theinputdatamainlyincludesnaturallanguagequeriesand
+databAass es hscohwenm ian iFnifgourmrea 5ti,o tnh.e N inaptuurta dl alatan gmuaaignel yq uinecrliueds easr en aentucroadl eldan agsu vaegcet oqru reerpierse saennd-
+databaseschemainformation. Naturallanguagequeriesareencodedasvectorrepresen-
+dtaattiaobnass, ea nscdh demataab iansfeo rsmchaetmiona .i nNfaotrumraalt iloann g(tuaabglee aqnude rcioeslu amren e nnacmodeesd, e atsc .)v eacrteo ern rceopdreesde ans-
+tations,anddatabaseschemainformation(tableandcolumnnames,etc.) areencodedas
+teamtiboends,d ainngds daast aabuaxsieli ascryh ecmona tienxfto rinmpauttio. nT h(tea bmleo daneld ccoomlubminne sn aemnceosd, eedtc .i)n aforer menactioodne da nads
+embeddingsasauxiliarycontextinput. Themodelcombinesencodedinformationand
+egmenbeerdatdeisn gcos raress apuoxnidliianrgy ScQonLt eqxute irniepsu ut.s iTnhge a m doedepel lecaormnbininge asr cehnictoedcteudr ei.n Tfohrem matoidonel acnadn
+generatescorrespondingSQLqueriesusingadeeplearningarchitecture. Themodelcan
+guenndeerrastteasn dco trhree sqpuoenrdyi ningt eSnQt La nqdu egreinese ruastein cgo rar edsepeopn ldeainrgn iSnQg La rscthaitteemcteunrtes. bTyh ele marondinegl ctahne
+understandthequeryintentandgeneratecorrespondingSQLstatementsbylearningthe
+umnadpeprisntagn rde ltahteio qnusehriyp ibnetetwnte aenn dn gaetunrearla tlea ncgourraegsep oannddi nSgQ SLQ. TLh seta etenmcoednitnsg b yan leda rfunsiniogn t hoef
+mapping relationship between natural language and SQL. The encoding and fusion of
+minpapupt idnagt ar helealtpio tnhseh mipo dbeelt waceceunr antealtyu ruanl dlaenrsgtuanadge a nadnd o pSeQraLt.e T thhee deantcaobdaisneg s tarnudct ufures iwonh eonf
+inputdatahelpthemodelaccuratelyunderstandandoperatethedatabasestructurewhen
+ginepnuetr adtaintag h SeQlpL t. he model accurately understand and operate the database structure when
+generatingSQL.
+generating SQL.
+FFiigguurree 55.. OOvveerrvviieeww ppiippeelliinnee ooff NNLL22PPYY22SSQQLL..
+Figure 5. Overview pipeline of NL2PY2SQL.
+ThesampleCSVconvertseachdatatableofalldatabasesdirectlyintoaCSVfile. This
+The sample CSV converts each data table of all databases directly into a CSV file. This
+allowsPythontoreadeachdatatablefiledirectlyandusethePandasdataframetorepresent
+allowTsh Pey stahmonp lteo C rSeVad c oenacvhe rdtsa teaa ctahb dlea tfial tea dbliere ocft layl la dnadt aubsaes eths ed iPraenctdlya si ndtaot aa CfrSaVm fie lteo. Trehpis-
+each data table. In the future, the large model can generate Python code and directly
+arellsoewnts e Paychth doant ato t arbelaed. Iena tchhe dfuattua rtea,b tlhee fi laler gdei rmecotdlye la cnadn ugseen ethraet eP aPnydthaos nd caotad efr aanmde d tior ercetply-
+calculatethedatatocheckwhetherthefinaldatameetsthenaturallanguagequestion.
+rceaslceunlta etaec thh ed adtaat ata tbol ec.h Ienc tkh ew fhuettuhreer, tthhee lfianrgael dmaotad eml ceaents g tehnee nraatteu rPayl tlhaonng ucoadgee aqnudes dtiiorenc. tly
+TheoutputofthelargemodelistheSQLstatementgeneratedforthenaturallanguage
+calcuTlahtee tohuet pduatt ao tfo t hchee lcakr gweh metohdeer lt hise tfihnea Sl QdaLt as tmateeemtse tnhte g neanteurraatle dla nfogru athgee nquateusrtiaol nl.a n-
+question. SincetheremaybemanyvariantsofSQLforthesameresult,wecannotdirectly
+guagTe hqeu eosuttiponu.t Soifn cthe et hlaerrge em mayo dbeel misa tnhye vSaQriLa nsttsa toefm SeQnLt fgoern tehrea tseadm feo rr etshuel tn, awtue rcaaln lnanot-
+judge whether the SQL statement is precisely the same. Therefore, the final method to
+guage question. Since there may be many variants of SQL for the same result, we cannot
+evaluatetheSQLaccuracyistocomparewhetherthequeryresultisconsistentwiththe
+result of the accurate SQL statement by executing the SQL statement. If the result set
+FutureInternet2025,17,12 10of24
+r0 generated by the generated SQL statement is precisely the same as the result set r1
+generatedbythecorrectSQL,theresultgeneratedbytheSQLisconsideredproper.
+3.2. Pre-Processing
+IntheNL2SQL(NaturalLanguagetoSQL)model,thedatapreprocessingandprompt
+generationstepsarekeystepstoensurethemodelcanunderstandandcorrectlygenerate
+SQLqueries.
+Datapreprocessingaimstoconvertnaturallanguagequeriesanddatabasestructure
+information into a format that the model can understand and process. The steps are
+asfollows:
+• Naturallanguagecleaningandstandardization;
+Denoising: removeirrelevantcharacters,punctuation,extraspaces,etc.
+Standardization: unifytheformatofdates,numbers,etc.
+• Wordsegmentationandpart-of-speechtagging;
+Wordsegmentationofnaturallanguagequeriesandsplittingsentencesintowordsor
+subwordshelpsthemodelidentifykeywords,entities,andoperations.
+Part-of-speechtagging(POSTagging)helpsthemodelunderstandthegrammatical
+roleofeachword.
+• NamedEntityRecognition(NER);
+Entityrecognition: identifyentitiessuchastableandcolumnnamesinthequery.
+• Syntacticanalysisanddependencyanalysis;
+Throughsyntacticanalysis,understandthegrammaticalrelationshipbetweenwords
+inthequery,suchasthesubject-verb-objectrelationship.
+Dependencyanalysishelpsidentifythedependencyrelationshipbetweenwords.
+• Databaseschemamapping;
+Obtainthedatabasestructureinformation,suchastablenames,columnnames,and
+theirdatatypes. Thisstepiskeytomatchingtheentitiesinthenaturallanguagequery
+withtheactualtablesandcolumnsinthedatabase.
+• Semanticunderstandingandconstraintanalysis;
+Identifytheconditions,constraints,andgoalsinthequerytohelpthemodelunder-
+standthebusinesslogicofthequery.
+Aftercompletingdatapreprocessing,generatingappropriatepromptsiskeytopassing
+naturallanguagequeriesanddatabaseschemainformationtothemodel. Thepurpose
+ofthisstageistoguidethemodelingeneratingcorrectSQLstatementsbyconstructing
+effectiveprompts. Thestepsareasfollows:
+• Constructingprompttemplates;
+Inordertohelpthemodelunderstandthetask,promptsareusuallyconstructedusing
+templates. Commontemplateformsincludebasictemplatesandtemplatescombinedwith
+databasestructure.
+• Combinedwithdatabaseschemainformation;
+Whengeneratingprompts,notonlynaturallanguagequeriesbutalsodatabasetable
+structureinformationshouldbepassedinsothatthemodelunderstandsthecontextof
+thequery.
+• Context-enhancedprompts;
+FutureInternet2025,17,12 11of24
+Use additional contextual information to enhance prompts, especially in complex
+queryscenarios.
+Guidethemodelinunderstandingthequeryintent.
+Thepromptshouldclearlyexpressthequery’sintent,suchasspecifyingoperations
+(SELECT,WHERE)orconstraints.
+• Promptoptimization;
+Improvethemodel’sperformancethroughdifferentpromptstructuresordiversified
+SQLquerytemplates.
+• Adjustmentandoptimization.
+Throughexperimentsandmodeltuning,adjusttheformatorcontentofpromptstoim-
+provetheaccuracyofgeneratedSQL.Forexample,trytousemoredetailedtablestructure
+informationormorespecificbusinesscontexttoenhancetheeffectivenessofprompts. The
+datapreprocessingandpromptgenerationalgorithmsareshowninAlgorithms1and2.
+Algorithm1: AlgorithmsforDataPreprocessing
+Input: queryandschema
+Output: processed_queryandprocessed_schema
+1 functionpreprocess(query,schema):
+2 cleaned_query=clean_and_standardize(query)
+3 tokenized_query=tokenize_and_pos_tag(cleaned_query)
+4 entities=named_entity_recognition(tokenized_query)
+5 syntactic_structure=syntax_and_dependency_analysis(tokenized_query)
+6 mapped_schema=map_to_schema(entities,schema)
+7 constraints=semantic_analysis(entities,mapped_schema)
+8 returntokenized_query,mapped_schema,constraints
+InAlgorithm1,startingfromtheinputnaturallanguagequeryanddatabaseschema
+information,theinformationisfinallyconvertedintoaformatsuitableforthemodelafter
+aseriesofprocessingsuchascleaning,wordsegmentation,entityrecognition,syntactic
+analysis,schemamapping,andsemanticanalysis.
+Algorithm2: Algorithmsforpromptgeneration
+Input: processed_query,processed_schemaandconstraints
+Output: prompt
+1 functiongenerate_prompt(processed_query,processed_schema,constraints):
+2 prompt_template=“TranslatethefollowingquestionintoSQL:{query}”
+prompt_with_schema=“Giventhefollowingtableschema: {schema},“+
+3
+prompt_template
+prompt_with_schema=prompt_with_schema.format
+4
+(query=processed_query,schema=processed_schema)
+5 ifconstraints:
+prompt_with_constraints=prompt_with_schema+“Applythe
+followingconstraints: {constraints}”
+prompt_with_constraints=prompt_with_constraints.format
+(constraints=constraints)
+6 else:
+7 prompt_with_constraints=prompt_with_schema
+8 returnprompt_with_constraints
+FutureInternet2025,17,12 12of24
+InAlgorithm2,wecombinethepreprocessedqueryanddatabaseschemainformation
+toconstructhintswithtablestructureandqueryintenttohelpthemodelunderstandthe
+queryandgeneratecorrectSQLquerystatements.
+3.3. NL2PYandIteration
+BasedonthegeneratedJSONfile,wedesignedapromptforDeepSeektogenerate
+Pythoncode. Whengeneratingcode,ensurethatPython’sPandasmoduleisimported,
+as Pandas will be used for data manipulation. Using the problem description, prompt
+information, and extracted field values from the table, create a prompt that guides the
+modeltogeneratethePandasquerycodeforansweringthequestion. TheLLMshould
+follow a chain-of-thought prompting method, generating Python code that adheres to
+aspecificstyle,includingbothreasoningstepsandthefinalPythoncode.
+ThegeneratedPythoncodeisthenexecutedtoverifyandoptimizeitsfunctionality.
+During execution, the code undergoes checks by the large model to identify potential
+syntaxerrors,confirmthataresultisgenerated,andensuretheresultsatisfiesthequestion
+requirements. Ifanyerrorsoccurortheresultsdonotmeetexpectations,theerrormessage
+andrelatedcontextaresentbacktotheLLM,requestingacorrectedversionofthePython
+code. ThisiterativeprocesscanrunuptoamaximumofNcycles,defaultingto5inthis
+case. Ifthequestionissuccessfullyanswered,theprocessexitsearly.
+Inthisprocess,wedecomposecomplexnaturallanguagequeriesintomultiplesub-
+tasksandgenerateintermediatecodeforeachsubtask. Then,wegraduallydeducethe
+logicofeachsubtaskandverifythevalidityofthecode. Finally,weintegrateandoptimize
+thevariousintermediatecodefragmentsintocompletePython. Thisstep-by-stepreasoning
+andverificationmethodeffectivelyimprovescodegeneration’saccuracy,readability,and
+maintainability. Thechainofthought(CoT)reasoningprocessisshowninAlgorithm3.
+Algorithm3: AlgorithmsforCoTreasoningprocess
+Input: processed_query,entitiesandsyntactic_structure
+Output: code_fragments
+1 functiongenerate_python_code_with_CoT(query,entities,syntactic_structure):
+2 sub_tasks=decompose_query(query)
+3 code_fragments=[]
+4 fortaskinsub_tasks:
+intermediate_code=generate_intermediate_code(task,entities)
+code_fragments.append(intermediate_code)
+7 validate_code(intermediate_code)
+8 final_code=integrate_code_fragments(code_fragments)
+optimized_code=optimize_code(final_code)
+returnoptimized_code
+InAlgorithm3, Pythoncodeisgeneratedstepbystepbydecomposingacomplex
+taskinto multiple subtasks. First, the query isdecomposedinto independentsubtasks,
+andintermediatecodeisgeneratedandverifiedforeachsubtask. Then,allintermediate
+codefragmentsareintegratedintothecompletecode,anditssimplicityandreadability
+areoptimized. Throughstep-by-stepreasoningandverification,thecodeofeachsubtask
+iscarefullycheckedtoensurethatthefinaloutputcodeisaccurate,efficient,andmeets
+userrequirements.
+Future Internet 2025, 17, x FOR PEER REVIEW 13 of 24
+FutureInternet2025,17,12 13of24
+3.4. NL2SQL and Iteration
+3.4. NL2SQLandIteration
+Using the generated Python code, we provide the question, relevant information, and
+Using the generated Python code, we provide the question, relevant information,
+Python code as inputs to the large model DeepSeek. With a Chain of Thought (CoT) ap-
+andPythoncodeasinputstothelargemodelDeepSeek. WithaChainofThought(CoT)
+proach, craft prompts to guide DeepSeek in generating an SQL statement based on data-
+approach, craft prompts to guide DeepSeek in generating an SQL statement based on
+base and contextual information. The output includes both the reasoning process and the
+databaseandcontextualinformation. Theoutputincludesboththereasoningprocessand
+generated SQL query. Various factors must be considered in designing the prompt to en-
+thegeneratedSQLquery. Variousfactorsmustbeconsideredindesigningthepromptto
+sure the model fully understands the goal.
+ensurethemodelfullyunderstandsthegoal.
+As shown in Figure 6, the large language model combines the context and prompt
+AsshowninFigure6,thelargelanguagemodelcombinesthecontextandprompt
+information to generate SQL statements according to relevant requirements. These re-
+informationtogenerateSQLstatementsaccordingtorelevantrequirements. Theserequire-
+quirements are mainly for some common problems in NL2SQL, and special requirements
+mentsaremainlyforsomecommonproblemsinNL2SQL,andspecialrequirementsand
+and specifications are made. For example, order by + limit one is preferred instead of
+specificationsaremade. Forexample,orderby+limitoneispreferredinsteadofmax/min,
+max/min, ID is selected, and necessary fields are displayed cautiously.
+IDisselected,andnecessaryfieldsaredisplayedcautiously.
+Figure 6. Generating SQL prompts diagram. We design the prompts on the experiences and
+Figure 6. Generating SQL prompts diagram. We design the prompts on the experiences and finan-
+financialrules.
+cial rules.
+AftergeneratingtheinitialSQL,thecodeisexecutedinthedatabase. Ifissuesarise,
+After generating the initial SQL, the code is executed in the database. If issues arise,
+theyarereturnedtoLLM,whichmayincludeerrorsinexecution, successfulexecution
+they are returned to LLM, which may include errors in execution, successful execution
+withemptyresults,orresultsthatdonotsatisfythequeryrequirements. Forexecution
+with empty results, or results that do not satisfy the query requirements. For execution
+errors,thesystemcapturestheerrormessageandsendsitbacktothemodel,prompting
+errors, the system captures the error message and sends it back to the model, prompting
+ittorefinethecodeandgenerateanewSQLstatement. Thisiterativeprocesscanrunup
+it to refine the code and generate a new SQL statement. This iterative process can run up
+toNcycles(defaultingto5inthiscase)andcanbeadjustedasneeded. Theprocessstops
+to N cycles (defaulting to 5 in this case) and can be adjusted as needed. The process stops
+immediatelyifthequerysuccessfullyanswersthequestion.
+immediately if the query successfully answers the question.
+3.5. Post-Processing
+3.5. Post-Processing
+AfterSQLgeneration,furtherrefinementsarenecessarytohandlecommonerrorsand
+impArofvteer aScQcuLr agceyn.eTryaptiiocanl, ifsusrutehserto raefidnderemssenintsc laurdee ndeicsepslsaayriyn gtoa nhaenxtdrlae ccoolmummno,ns eelrercotirnsg
+anindc oimrrpecrtovfiee ladcsc,uormaciytt.i nTgypsipceacl iifisseudefis etlod as,dhdarnesdsl iinngclunudlel dviaslpuleasyiinngc aalnc uelxattriao ncos,ludmupnl,i csea-te
+levcatilnuge si,nucnorcrleeactr fimeeldtrsi,c odmefiittniintgio snpse,cdieficeidm fiaellcdosn, vhearnsdiolinnsg, rneuqlul ivraeldueasg ginr ecgaalcteulcaatlicounlsa,t dioun-s,
+palincadteo rvdaelur-ebsa, suendccleoamr pmuettartiico dnesfi. nBiatsioendso, dnetchiemsealc choencvkeprosiinontss,, arefiqnuailrepdr oamggprteigsactera cfatelcdut-o
+lagtuioindse, tahnedm oorddeelri-nbapseerdfo rcmominpguetfafteicotnivs.e Bvaasliedda toionn tahnedsea dchjuesctkmpeonintst,s,u lat imfinaatel lpyrroemtuprnt iinsg
+craamfteodre toa cgcuuirdaet ethSeQ mLoqdueelr iyn, apsesrfhoorwmninign eFffigeuctriev7e. validation and adjustments, ultimately
+returning a more accurate SQL query, as shown in Figure 7.
+In Figure 7, first, a syntax check is performed to ensure that the generated SQL query
+complies with the SQL syntax specification. Next, query optimization is performed to sim-
+plify redundant expressions or subqueries to improve query efficiency. Finally, database-
+specific adjustments are performed to ensure the generated SQL can be correctly executed
+in a specific database to avoid potential errors or performance issues. These steps ensure
+that the final SQL query can accurately and efficiently meet user needs. This final prompt
+ensures that DeepSeek evaluates the SQL query against each of these criteria, making
+Future Internet 2025, 17, x FOR PEER REVIEW 14 of 24
+targeted adjustments as needed. The revised SQL should then better align with the prob-
+FutureInternet2025,17,12 14of24
+lem requirements and provide a more reliable answer.
+Figure7. ThecheckpointsofPost-Process. WemustcheckthegeneratedSQLincolumns,fields,
+Figure 7. The checkpoints of Post-Process. We must check the generated SQL in columns, fields,
+functions,numbers,etc.
+functions, numbers, etc.
+InFigure7,first,asyntaxcheckisperformedtoensurethatthegeneratedSQLquery
+When using the NL2PY followed by the PY2SQL method, the iterative processing
+complies with the SQL syntax specification. Next, query optimization is performed to
+steps may result in significant computational overhead, especially in scenarios with large-
+simplifyredundantexpressionsorsubqueriestoimprovequeryefficiency.Finally,database-
+scale data sets. Each transformation step (from natural language to Python code to SQL
+specificadjustmentsareperformedtoensurethegeneratedSQLcanbecorrectlyexecuted
+query) consumes computational resources, and as the complexity of the query increases,
+inaspecificdatabasetoavoidpotentialerrorsorperformanceissues. Thesestepsensure
+so do the model’s processing time and memory requirements. This overhead is particu-
+thatthefinalSQLquerycanaccuratelyandefficientlymeetuserneeds. Thisfinalprompt
+larly prominent in systems with high real-time requirements and may affect the overall
+ensures that DeepSeek evaluates the SQL query against each of these criteria, making
+query efficiency and system response time. To solve this problem, we first reduce unnec-
+targetedadjustmentsasneeded.TherevisedSQLshouldthenbetteralignwiththeproblem
+essary intermediate steps by optimizing the conversion process. Secondly, parallel pro-
+requirementsandprovideamorereliableanswer.
+cessing and distributed computing are used to distribute tasks to multiple nodes to im-
+When using the NL2PY followed by the PY2SQL method, the iterative processing
+prove processing efficiency. For common query patterns, caching and precomputation can
+stepsmayresultinsignificantcomputationaloverhead,especiallyinscenarioswithlarge-
+avoid repeated calculations and reduce the computational cost of each query. Finally, ac-
+scaledatasets. Eachtransformationstep(fromnaturallanguagetoPythoncodetoSQL
+cording to the complexity of the query, an adaptive simplification strategy is adopted to
+query)consumescomputationalresources,andasthecomplexityofthequeryincreases,so
+save computing resources further. Through these methods, the computational overhead
+dothemodel’sprocessingtimeandmemoryrequirements. Thisoverheadisparticularly
+is balanced while improving accuracy, and the system’s efficiency is ensured.
+prominentinsystemswithhighreal-timerequirementsandmayaffecttheoverallquery
+efficiencyandsystemresponsetime. Tosolvethisproblem,wefirstreduceunnecessary
+3.6. Application Cases
+intermediatestepsbyoptimizingtheconversionprocess. Secondly,parallelprocessingand
+The NL2PY2SQL method we proposed in this article has been effectively used in ap-
+distributedcomputingareusedtodistributetaskstomultiplenodestoimproveprocessing
+plication scenarios, demonstrating its significant advantages in processing complex busi-
+efficiency. Forcommonquerypatterns,cachingandprecomputationcanavoidrepeated
+ness logic, improving query efficiency, and reducing maintenance costs. The details are
+calculations and reduce the computational cost of each query. Finally, according to the
+shown in Figure 8.
+complexityofthequery,anadaptivesimplificationstrategyisadoptedtosavecomputing
+resourcesfurther. Throughthesemethods,thecomputationaloverheadisbalancedwhile
+improvingaccuracy,andthesystem’sefficiencyisensured.
+FutureInternet2025,17,12 15of24
+3.6. ApplicationCases
+The NL2PY2SQL method we proposed in this article has been effectively used in
+application scenarios, demonstrating its significant advantages in processing complex
+businesslogic,improvingqueryefficiency,andreducingmaintenancecosts. Thedetailsare
+Future Internet 2025, 17, x FOR PEER REVIEW 15 of 24
+showninFigure8.
+Figure8.ApplicaFtiigounresc 8e.n Aapripol.ication scenario.
+As shown in FAigsu srheo8w,nb yinc oFingvuerret i8n, gbyn actounrvaelrltainngg unaagtuerainl tloanPgyutahgoen inctood Peyatnhdont hceonde and then
+generatingSQLgefnroermatitnhge SPQytLh fornomco tdhee, Pthyitshomne ctohdoed, mthaisk mesefthuolldu mseakoefst hfuellfl uesxeib oifli ttyhea flnedxibility and
+efficiencyofPyetffihocnientocya cohf iPeyvtehoancc tuor aactehieexvpe raecscsuioranteo fexbpurseisnseiosns noef ebdussiannedss inne-dedesp tahndo pinti--depth opti-
+mizationofdatamqizuaetriioens .oIft idsaetsap qeuceiarlileys.s Iuti tias belsepfeocriafilnlya nsuceit;afibeleld fsosr uficnhaanscem; efideilcdasl sauncdh leags amledical and
+fieldsthatrequilreegcaol mfiepldlesx tdhaatt arepqruoicrees scionmgphlaexv edfautart phreorcveesrsiifinegd hiatvseb rfuoratdhearp vpelircifiabeidli titys abnrdoad applica-
+innovativevalubei.lity and innovative value.
+TheNL2PY2SQTLhem NeLth2PodY2pSrQoLp omseedthoind tphriosppoaspeedr iann tdhiNs pLa2pSeQr Lanhda vNeLc2hSaQrLa chtearvies tcichsaracteristics
+inapplicationsionu atpsipdleicoatfiofinnsa onucets(idsuec ohf afisnaendcuec (astuiocnh aasn dedsuucpaptiloync ahnadin s)u.pNpLly2 PchYa2inSQ). LNLfi2rsPtY2SQL first
+converts natural language into Python code, using Python’s flexibility and rich library
+converts natural language into Python code, using Python’s flexibility and rich library
+support to achieve complex logic expression and data analysis. For example, it can be used
+supporttoachievecomplexlogicexpressionanddataanalysis. Forexample,itcanbeused
+in education to design dynamic learning paths and evaluate student performance; in the
+ineducationtodesigndynamiclearningpathsandevaluatestudentperformance;inthe
+supply chain, it can handle complex inventory management algorithms, transportation
+supplychain,itcanhandlecomplexinventorymanagementalgorithms,transportation
+optimization problems, etc. Python code is easy to debug, expand, and modularize, can
+optimizationproblems,etc. Pythoncodeiseasytodebug,expand,andmodularize,can
+more intuitively reflect business logic, and convert logic into efficient database operations
+moreintuitivelyreflectbusinesslogic,andconvertlogicintoefficientdatabaseoperations
+through PY2SQL. In contrast, NL2SQL directly generates SQL from natural language,
+throughPY2SQL.Incontrast,NL2SQLdirectlygeneratesSQLfromnaturallanguage,which
+which is suitable for quickly executing simple queries. Still, dealing with complex multi-
+issuitableforquicklyexecutingsimplequeries. Still,dealingwithcomplexmulti-table
+table associations, nested logic, and dynamic calculation tasks is difficult. In addition, the
+associations,nestedlogic,anddynamiccalculationtasksisdifficult. Inaddition,theSQL
+SQL statements generated by NL2SQL need more precise readability and have high
+statementsgeneratedbyNL2SQLneedmoreprecisereadabilityandhavehighmaintenance
+maintenance costs. Through two-step processing, NL2PY2SQL ensures support for com-
+costs. Throughtwo-stepprocessing,NL2PY2SQLensuressupportforcomplexlogicand
+plex logic and considers performance and scalability, providing a more flexible and relia-
+considersperformanceandscalability,providingamoreflexibleandreliablesolutionfor
+ble solution for diversified scenarios such as education and supply chain.
+diversifiedscenariossuchaseducationandsupplychain.
+4. Experimental Results and Analysis
+4. ExperimentalResultsandAnalysis
+4.1. Datasets and Evaluation Metrics
+4.1. DatasetsandEvaluationMetrics
+Considering that the BIRD dataset is more complex and resembles real-world scenar-
+Consideriniogst hmaotrteh eclBoIsRelDy, dinactalusedtinisgm fionraenccoiaml cpolenxteaxntsd, trhesise mpabpleers ruesaels- wthoer lBdIRscDe ndaervioelsopment da-
+moreclosely,intcalusedti ansg tfihen atenscti adlactaosnette, xwtsh,itchhi salpiganpse rwuitshe sththe ebeBnIRchDmdaervkse lcohpomseenn tbyd astiamsieltara smodels.
+thetestdataset,whiTchhea lBigIRnDs wdiatthastehte wbeans crhemleaasrekds cohno s2e1n Sbeyptseimmbilearr 2m02o3d. eIlts .represents a pioneering
+cross-domain dataset to study the impact of extensive database content on text-to-SQL
+parsing. BIRD comprises over 12,751 unique question-SQL pairs, 95 large databases total-
+ing 33.4 GB, and 37 specialized domains such as blockchain, hockey, healthcare, and edu-
+cation. The BIRD dataset is broader, not a specialized dataset for finance. It covers games,
+sports, coding, finance, biology, etc.
+FutureInternet2025,17,12 16of24
+The BIRD dataset was released on 21 September 2023. It represents a pioneering
+cross-domain dataset to study the impact of extensive database content on text-to-SQL
+parsing.BIRDcomprisesover12,751uniquequestion-SQLpairs,95largedatabasestotaling
+33.4GB,and37specializeddomainssuchasblockchain,hockey,healthcare,andeducation.
+TheBIRDdatasetisbroader,notaspecializeddatasetforfinance. Itcoversgames,sports,
+coding,finance,biology,etc.
+ComparedwiththeSpider2.0dataset,theBIRDdatasethasapparentadvantagesin
+NL2SQLexperimentsinthefinancialfield. First,theBIRDdatasetfocusesonthecomplex
+tablestructureandbusinesslogicuniquetothefinancialindustry,coveringmanyfinancial
+statements,transactionrecords,andcustomerdata,whichcanmorerealisticallyreflectthe
+characteristicsoffinancialdata. Secondly,thequeriesintheBIRDdatasetoftencontain
+morespecificoperationsrelatedtothefinancialfield,suchasfinancialcalculations,risk
+assessments,anddynamicqueries,whichenablesthemodeltobetteradapttotheneedsof
+practicalapplications. Incontrast,althoughtheSpider2.0datasetcoversmultiplefields,it
+lacksdedicateddataandscenariosforthefinancialindustry,soitsperformanceinfinancial
+tasksmaynotbeasgoodastheBIRDdataset. Thefollowingarethedatabasesusedforthe
+NL2SQLquestiontestandthenumberofquestionsineachdatabase.
+InTable2,theinputdataistheBIRDdevelopmentdatasetdev(https://bird-bench.
+oss-cn-beijing.aliyuncs.com/dev.zip, (accessed on 8 October 2024)). This dataset has
+1533natural language query questions. We select EX (Execution Accuracy), F1 (Partial
+Match Score), and VES (Value Execution Score) metrics to facilitate better comparative
+testingandconductexperimentsonthedataset’sSimple,Moderate,andChallengingtypes,
+comparingtheresultswith11typicalNL2SQLmethods.
+Table2.Databasesandnumberofquestionsperdatabase.
+Database NumberofQuestions
+card_games 191
+codebase_community 186
+formula_1 174
+thrombosis_prediction 163
+student_club 158
+toxicology 145
+superhero 129
+european_football_2 129
+financial 106
+california_schools 89
+debit_card_specializing 64
+1. EX(ExecutionAccuracy)
+EXreferstoExecutionAccuracy,whichindicateswhethertheresultsreturnedbythe
+newSQLqueriesarethesameasthoseofthetargetquerieswhenexecutedonthedatabase.
+IftheresultsmatchthoseoftargetSQLqueries,theyarecountedascorrect. EXmainly
+focuses on the accuracy of the query execution results rather than whether the specific
+structureoftheSQLqueriesmatchesexactly.
+TotalEX(TotalExecutionAccuracy)isusuallyusedtomeasuretheaccuracyofSQL
+queriesgeneratedbytheNL2SQLmodelwhenexecuted. ItindicatestheproportionofSQL
+FutureInternet2025,17,12 17of24
+queriesgeneratedbythemodelinallinputsamplesthatarecorrectlyexecutedandreturn
+expectedresults. Thecalculationformulaisasfollows:
+Numberof CorrectExecutions
+TotalEX = (2)
+Total Numberof Samples
+InFormula(2),theNumberofCorrectExecutionsreferstothenumberofsamples
+inwhichthegeneratedSQLquerycancorrectlyreturntheexpectedresultsduringactual
+execution. ThetotalNumberofSamplesreferstothetotalnumberofsamplesofall-natural
+languagequeriesinthetestset. ThetotalEXvalueisbetween0and1,usuallyexpressed
+asapercentage. Itisusedtoevaluatethemodel’soverallperformanceingeneratingSQL
+queriesinthetestsetandcorrectlyreturningresults.
+2. F1(PartialMatchScore)
+TheF1scoreisusedtomeasurethesimilaritybetweentheSQLgeneratedbythemodel
+andthetargetSQL.Bycomparingtheoverlapinsyntaxandstructurebetweenthegenerated
+SQLandthetargetSQL,theF1metricprovidesafiner-grainedassessmentoftheSQLgen-
+erationeffectiveness. Typically,itcalculatestheprecisionandrecallbetweenthegenerated
+SQLandthetargetSQLandthencomputestheF1valueasacomprehensiveevaluation.
+3. VES(ValueExecutionScore)
+VESreferstoValueExecutionScore,anewmetricinNL2SQLthatfocusesonwhether
+thegeneratedSQLqueriescancorrectlyretrievespecificvalueswhilesatisfyingthequery
+conditions. Forexample,ifthequeryresultscontainspecificnumbers,strings,ordates,
+VESevaluatestheaccuracyofthegeneratedSQLqueriesintermsofconditionexpression
+andvaluematching,furtherexaminingtheexecutionperformanceofthegeneratedSQL
+indetail.
+These three metrics assess the performance of the NL2SQL model from different
+perspectives: EXfocusesontheconsistencyofexecutionresults,F1emphasizesstructural
+similarity, and VES concerns the precision of value matching. This multi-dimensional
+evaluation system helps researchers gain a more comprehensive understanding of the
+model’sstrengthsandweaknesses.
+Ablationstudiesareusedtoanalyzethecontributionandimportanceofvariouscom-
+ponents within a model or algorithm. Specifically, in fields like machine learning and
+deeplearning,ablationstudiesinvolvegraduallyremovingcertainmodelcomponentsand
+observingperformancechangestodetermineeachpart’simpactonoverallperformance.
+Tobetteridentifythecriticalstepsintheentireprocess,thispaperdesignsablationexperi-
+ments,includingtheremovalofRevisePY,theexclusionofNL2PY,andthenon-useofCoT
+(ChainofThought),amongotheraspects.
+4.2. PredictionResults
+4.2.1. EXPredictionResults
+TodeeplyanalyzetheperformanceofdifferentmodelsinNL2SQLtasks, weused
+SuperSQL,SFT_CodeS_15B_EK,SFT_CodeS_7B_EK,DAILSQL_SC,SFT_CodeS_3B_EK,
+DAILSQL,SFT_CodeS_1B_EK,C3_SQL,RESDSQL_3B_EK,RESDSQL_Large_EK,RESD-
+SQL_Base_EK,etc. intheexperiment. Comparativeexperimentswereconductedonthe
+model. Thesemodelshavesignificantdifferencesinarchitecture,trainingdata,parameter
+scale,etc.,whichcanhelpuscomprehensivelyevaluatethemodel’saccuracy,efficiency,and
+adaptability. Large-scalemodelssuchasSFT_CodeS_15B_EKandRESDSQL_Large_EKcan
+handlemorecomplexqueriesbutmaybringhighercomputationaloverhead. Incontrast,
+small-scalemodelssuchasSFT_CodeS_1B_EKcanprovidefasterinferencespeedandare
+suitableforreal-timequeryscenarios. ModelssuchasDAILSQLandRESDSQLcanbetter
+FutureInternet2025,17,12 18of24
+adapttothedatacharacteristicsofthefinancialfieldandhandlecomplexqueriessuchas
+financialstatementsandtransactiondatabyoptimizingspecificdatabasestructures. By
+comparingtheperformanceofdifferentmodels,wecanbetterunderstandtheiradvantages
+anddisadvantagesinfinancialapplicationsandultimatelyhelpselectthemostsuitable
+modeltoimprovetheaccuracyandefficiencyoftheNL2SQLsystem.
+AsshowninTable3,intheSimpleexamples,themodelimprovedbyatleast1.83%
+andbyasmuchas27.24%comparedtosubsequentmodels. IntheModerateexamples,it
+achievedaminimumimprovementof4.31%andamaximumimprovementof30.82%over
+othermodels. IntheChallengingexamples,themodelimprovedbyatleast3.45%andup
+to32.42%comparedtoothermodels. Overall,themodelshowedanimprovementofat
+least2.73%andamaximumof28.81%comparedtoothers.
+Table3.ComparisonofEXpredictionresultsonBIRDdataset,comparedwith11NL2SQLmodelson
+Challenging,Moderate,andSimpledatasets.Overall,theFI-NL2PY2SQLEXcomparisonresultsare
+significantlybetterthanthoseofothermodels.
+NL2SQLModel SimpleEX ModerateEX ChallengingEX TotalEX
+NL2PY2SQL 67.78% 48.49% 46.90% 59.97%
+SuperSQL 65.95% 44.18% 43.45% 57.24%
+SFT_CodeS_15B_EK 64.97% 44.83% 40.00% 56.52%
+SFT_CodeS_7B_EK 63.68% 42.46% 38.62% 54.89%
+DAILSQL_SC 62.49% 42.67% 42.76% 54.63%
+SFT_CodeS_3B_EK 61.84% 42.24% 35.86% 53.46%
+DAILSQL 62.05% 39.87% 35.86% 52.87%
+SFT_CodeS_1B_EK 58.05% 34.48% 34.48% 48.70%
+C3_SQL 58.05% 34.91% 29.66% 48.37%
+RESDSQL_3B_EK 52.43% 30.60% 15.86% 42.37%
+RESDSQL_Large_EK 45.95% 23.92% 20.00% 36.83%
+RESDSQL_Base_EK 40.54% 17.67% 14.48% 31.16%
+4.2.2. F1PredictionResults
+FromtheF1experimentalresults,intheSimpleexamples,themodelimprovedbyat
+least2.28%andbyasmuchas28.35%comparedtosubsequentmodels. IntheModerate
+examples,itachievedaminimumimprovementof6.17%andamaximumimprovement
+of 33.64% over other models. In the Challenging examples, the model improved by at
+least5.13%andupto36.36%comparedtoothermodels. Overall,themodelshowedan
+improvementofatleast3.72%andamaximumof30.7%comparedtoothers. Asshownin
+Table4.
+Table4.ComparisonofF1predictionresultsonBIRDdataset,comparedwith11NL2SQLmodelson
+Challenging,Moderate,andSimpledatasets.Overall,theFI-NL2PY2SQLF1comparisonresultsare
+significantlybetterthanthoseofothermodels.
+NL2SQLModel SimpleF1 ModerateF1 ChallengingF1 TotalF1
+NL2PY2SQL 70.79% 53.52% 52.33% 63.82%
+SuperSQL 68.51% 47.35% 47.20% 60.10%
+SFT_CodeS_15B_EK 67.26% 48.06% 44.19% 59.27%
+FutureInternet2025,17,12 19of24
+Table4.Cont.
+NL2SQLModel SimpleF1 ModerateF1 ChallengingF1 TotalF1
+DAILSQL_SC 65.26% 45.23% 44.84% 57.27%
+SFT_CodeS_7B_EK 65.66% 44.62% 40.24% 56.89%
+SFT_CodeS_3B_EK 64.34% 45.16% 39.73% 56.21%
+DAILSQL 64.11% 42.62% 38.60% 55.20%
+C3_SQL 60.38% 38.07% 32.95% 51.04%
+SFT_CodeS_1B_EK 60.29% 36.78% 37.06% 50.98%
+RESDSQL_3B_EK 54.70% 32.90% 17.79% 44.62%
+RESDSQL_Large_EK 48.62% 25.29% 21.61% 39.01%
+RESDSQL_Base_EK 42.44% 19.88% 15.97% 33.12%
+4.2.3. VESPredictionResults
+FromtheVESexperimentalresults,intheSimpleexamples,themodelimprovedbyat
+least5.87%andbyasmuchas33.49%comparedtosubsequentmodels.
+AsshowninTable5,intheModerateexamples,itachievedaminimumimprovement
+of7.6%andamaximumimprovementof35.93%overothermodels. IntheChallenging
+examples, the model improved by at least 5.37% and up to 38.07% compared to other
+models. Overall,themodelshowedanimprovementofatleast6.34%andamaximumof
+34.66%comparedtoothers.
+Table5.ComparisonofVESpredictionresults,comparedwith11NL2SQLmodelsonChallenging,
+Moderate,andSimpledatasets.Overall,theFI-NL2PY2SQLVEScomparisonresultsaresignificantly
+betterthanthoseofothermodels.
+NL2SQLModel SimpleVES ModerateVES ChallengingVES TotalVES
+NL2PY2SQL 73.00% 54.84% 52.23% 65.54%
+SuperSQL 67.13% 47.24% 46.86% 59.20%
+SFT_CodeS_15B_EK 66.17% 46.38% 47.97% 58.46%
+SFT_CodeS_7B_EK 64.70% 44.78% 55.83% 57.84%
+SFT_CodeS_3B_EK 63.45% 47.57% 36.05% 56.05%
+DAILSQL_SC 64.31% 42.13% 44.55% 55.73%
+DAILSQL 63.63% 39.32% 37.73% 53.83%
+SFT_CodeS_1B_EK 58.94% 36.28% 33.91% 49.72%
+C3_SQL 58.13% 36.11% 28.83% 48.70%
+RESDSQL_3B_EK 50.91% 32.12% 27.35% 43.00%
+RESDSQL_Large_EK 44.82% 25.10% 29.73% 37.43%
+RESDSQL_Base_EK 39.51% 18.91% 14.16% 30.88%
+4.2.4. StatisticalSignificanceTest
+Statisticalsignificancetestingprovidesascientificbasisfordecision-making,optimizes
+resource allocation, and improves the credibility of results by verifying assumptions,
+assessing causality, and reducing subjective bias. It is widely used in multi-field data
+analysisandverification. TounderstandtheeffectofourproposedNL2PY2SQLmethod,
+weconductedasignificancetest,andtheresultsareshowninTable6.
+FutureInternet2025,17,12 20of24
+Table6.Significancetestresults.
+ModelName TotalEX TotalF1Score TotalVES PValueofEX PValueofF1 PValueofVES
+NL2PY2SQL 59.97 63.57 65.54 - - -
+SuperSQL 57.24 60.1 59.2 0.1249 0.0480 0.0003
+SFT_CodeS_15B_EK 56.52 59.27 58.46 0.0528 0.0145 0.0001
+SFT_CodeS_7B_EK 54.89 56.89 57.84 0.0044 0.0002 0.0000
+DAILSQL_SC 54.63 57.27 55.73 0.0028 0.0004 0.0000
+SFT_CodeS_3B_EK 53.46 56.21 56.05 0.0003 0.0000 0.0000
+DAILSQL 52.87 55.2 53.83 0.0001 0.0000 0.0000
+SFT_CodeS_1B_EK 48.7 50.98 49.72 0.0000 0.0000 0.0000
+C3_SQL 48.37 51.04 48.7 0.0000 0.0000 0.0000
+RESDSQL_3B_EK 42.37 44.62 43 0.0000 0.0000 0.0000
+RESDSQL_Large_EK 36.83 39.01 37.43 0.0000 0.0000 0.0000
+RESDSQL_Base_EK 31.16 33.12 30.88 0.0000 0.0000 0.0000
+AscanbeseenfromTable6,theEX,F1,andVESindicatorsofNL2PY2SQLandother
+comparedmodels,PvalueofEx,PValueofF1,andPValueofVES.Pvaluesforpairwise
+statisticalsignificancetestsofNL2PY2SQLrelativetothefollowingmodels. Exceptthat
+thePvalueofEXbetweenNL2PY2SQLandSUPERSQLdidnotreachbelow0.05,other
+indicatorsallreachedbelow0.05,indicatingthatNL2PY2SQLexceedstheindicatorsof
+differentmodelsunderspecificindicatorsandisstatisticallysignificant.
+4.2.5. ErrorAnalysis
+IntheNL2SQLexperimentusingtheBIRDdataset,theerrorsmainlyfocusedonentity
+recognition,joinoperations,andprocessingcomplexconditions. First,entityrecognition
+errorsoccurredfrequently,especiallywhenthequeryinvolvedmultipletablesandcolumns.
+ManycolumnnamesandtablenamesintheBIRDdatasethavesimilaritiesorsynonyms,
+andthemodelsometimesfailstocorrectlyidentifytheseentities,resultinginreferencesto
+thewrongtableorcolumn,therebygeneratinginvalidSQLqueries. Forexample,theuser
+querymaymention“totalsales”,butthemodelmayincorrectlymapitto“salesquantity”,
+resultinginlogicalmisunderstanding.
+Second,jointoperationerrorsarealsoacommonproblem. Therearecomplexrela-
+tionshipsbetweenthetablesintheBIRDdataset. WhenthemodelgeneratesSQLqueries
+formulti-tablejoins,itsometimesfailstocorrectlyunderstandtheassociationconditions
+betweenthetables,resultinginthegeneratedqueryomittingthenecessaryjoinconditions,
+leadingtoCartesianproductsorincorrectdatasetresults. Inaddition,themodel’sprocess-
+ingofcomplexnestedqueriesisalsoinsufficient. Whentheuser’snaturallanguagequery
+containsnestedconditions,thesubquerystructuregeneratedbythemodelsometimeshas
+errors,resultingintheinabilitytoexecutetheSQLqueryortheresultsnotbeingdifferent.
+Finally, the errors of entity recognition and complex joins were solved using the
+NL2PY and then the PY2SQL method. First, the natural language was converted into
+highlyreadablePythoncodetoclarifythelogic,andthenthePythoncodewasconverted
+intoSQLqueries. Thisgradualconversionreducedambiguityandensuredthatthemodel
+had clear context and logical relationships when understanding and generating SQL,
+especiallyinprocessingmulti-tablejoinsandnestedconditions.
+FutureInternet2025,17,12 21of24
+4.3. AblationExperimentPredictionResults
+FromtheablationcomparisonresultsofEX,removingCoThasthegreatestimpact
+ontheresults,causinganaccuracydecreaseof11.27%. Infact,removingNL2PYleadsto
+adecreaseinaccuracyof1.95%. FromtheablationcomparisonresultsofF1, removing
+CoTalsohasthegreatestimpact, resultinginanF1scoredecreaseof11.94%. Thenext
+largestimpactcomesfromremovingReviseSQL,whichdecreasesF1by1.47%. Fromthe
+ablationcomparisonresultsofVES,removingCoTagainhasthegreatestimpact,causing
+aVESdecreaseof12.01%. Incontrast,removingNL2PYresultsinadecreaseof2.6%in
+VES.TheanalysisaboveshowsthatCoTandNL2PYsignificantlyaffecttheentireprocess,
+suggestingthatfurtherresearchcanbeconductedonthesetwocomponents.
+AsshowninFigure9,theChainThinking(CoT)andNL2PYeachhavetheirunique
+contributionstoresultsinNL2SQL,andtheirsynergycansignificantlyimprovetheaccu-
+racyandlogicofquerygeneration. CoT(ChainofThought)usesstep-by-stepreasoningto
+helpthemodelhandlecomplexlogicandconditionsmoreaccuratelywhengeneratingSQL
+queries. Itbreaksdowntheproblemandgraduallyexpandsthinkingtoavoidjumping
+directlytothefinalanswer,therebyreducingthepossibilityoferrors. Forexample,when
+processingcomplexmulti-tablejoinsornestedqueries,CoThelpsthemodelclarifythe
+reasoningprocessateachstep,makingthefinalSQLquerymoreinterpretableandaccurate.
+NL2PYfurtherclarifiesthequerylogicbyconvertingnaturallanguageintoPythoncode.
+Asanintermediateexpressionform,Pythoncodemakestheexecutionofquerystepsmore
+controllableandpreciseandprovidesamoreaccuratebasisforsubsequentSQLconver-
+sion. Throughthisstep-by-steptransformation,NL2PYreducesthecomplexityofnatural
+language understanding, allowing the model to generate SQL queries more accurately.
+Combiningthetwo,CoTisresponsiblefortherefinedreasoningprocess,whileNL2PY
+Future Internet 2025, 17, x FOR PEER eRnEVsuIErWes the logical operability of queries, thus improving the overall performan2c1e oafn 2d4
+accuracyoftheNL2SQLsystem.
+FFiigguurree 99.. CCoommpparairsiosno nofo afbalbatliaotnio enxepxepriemriemnet nptrepdriecdtiiocnti ornesurelstsu oltns BonIRBDI RdDatadsaetta. sMetu.ltMipluel taibpllaetiaobn-
+lationexperimentswereconducted, duringwhichCOT,NL2PY,SQLIteration, andPYIteration
+experiments were conducted, during which COT, NL2PY, SQL Iteration, and PY Iteration were re-
+wereremoved.
+moved.
+ThemethodproposedinthisarticlefirstconvertsnaturallanguagetoPythonand
+The method proposed in this article first converts natural language to Python and
+thentoSQL,whichcanflexiblyimplementcomplextransactionlogicandriskmodelsin
+then to SQL, which can flexibly implement complex transaction logic and risk models in
+thefinancialfieldandusePythondataanalysisandmodelingtoprocesslarge-scaledata
+the financial field and use Python data analysis and modeling to process large-scale data
+efficiently,thussignificantlyimprovingtheaccuracyandreliabilityofqueries. Interpretabil-
+efficiently, thus significantly improving the accuracy and reliability of queries. Interpret-
+ability and decision-making efficiency significantly reduce maintenance costs. In the med-
+ical and legal fields, the method of NL2PY combined with PY2SQL has demonstrated
+strong adaptability. Using Python to express complex logic, such as medical diagnosis
+paths, legal case reasoning, etc., and then converting it to SQL to achieve efficient queries
+and data operations can simplify multi-source data integration and support personalized
+analysis and decision-making. At the same time, the rich Python library can meet the in-
+dustry’s specific needs and promote intelligent upgrades.
+Financial applications based on LLM may face bias risks and compliance issues. For
+example, the model may inherit biases in the training data, leading to unfair decisions in
+credit approval, risk assessment, etc. In addition, the generated content may conflict with
+financial regulations or fail to meet regulatory requirements. To address these challenges,
+it is necessary to strengthen data review, introduce bias correction mechanisms, and com-
+bine strict model output monitoring and compliance audits to ensure fairness and legality
+while protecting customer rights and reducing legal and reputational risks. In order to
+comply with GDPR or financial data privacy laws, LLM should embed privacy protection
+mechanisms such as data minimization, de-identification, and encryption technologies to
+ensure that user data is not abused during training and inference. Model development
+must follow privacy design principles and conduct regular compliance audits and risk
+assessments. In addition, access control and output filtering can be set to prevent the gen-
+eration of sensitive information. Transparent explanations of model behavior and user
+data permission management are crucial to meeting regulatory requirements and enhanc-
+ing user trust.
+5. Conclusions
+This paper thoroughly analyzes previous advancements and challenges in NL2SQL,
+considers the unique characteristics of the financial industry, and proposes a tailored
+NL2SQL approach specifically designed for this sector on the edge-cloud computing
+FutureInternet2025,17,12 22of24
+ityanddecision-makingefficiencysignificantlyreducemaintenancecosts. Inthemedical
+andlegalfields,themethodofNL2PYcombinedwithPY2SQLhasdemonstratedstrong
+adaptability. UsingPythontoexpresscomplexlogic,suchasmedicaldiagnosispaths,legal
+casereasoning, etc., andthenconvertingittoSQLtoachieveefficientqueriesanddata
+operationscansimplifymulti-sourcedataintegrationandsupportpersonalizedanalysis
+anddecision-making. Atthesametime,therichPythonlibrarycanmeettheindustry’s
+specificneedsandpromoteintelligentupgrades.
+FinancialapplicationsbasedonLLMmayfacebiasrisksandcomplianceissues. For
+example,themodelmayinheritbiasesinthetrainingdata,leadingtounfairdecisionsin
+creditapproval,riskassessment,etc. Inaddition,thegeneratedcontentmayconflictwith
+financialregulationsorfailtomeetregulatoryrequirements. Toaddressthesechallenges,it
+isnecessarytostrengthendatareview,introducebiascorrectionmechanisms,andcombine
+strict model output monitoring and compliance audits to ensure fairness and legality
+whileprotectingcustomerrightsandreducinglegalandreputationalrisks. Inorderto
+complywithGDPRorfinancialdataprivacylaws,LLMshouldembedprivacyprotection
+mechanismssuchasdataminimization,de-identification,andencryptiontechnologiesto
+ensurethatuserdataisnotabusedduringtrainingandinference. Modeldevelopment
+must follow privacy design principles and conduct regular compliance audits and risk
+assessments. In addition, access control and output filtering can be set to prevent the
+generation of sensitive information. Transparent explanations of model behavior and
+user data permission management are crucial to meeting regulatory requirements and
+enhancingusertrust.
+5. Conclusions
+ThispaperthoroughlyanalyzespreviousadvancementsandchallengesinNL2SQL,
+considers the unique characteristics of the financial industry, and proposes a tailored
+NL2SQLapproachspecificallydesignedforthissectorontheedge-cloudcomputingplat-
+form. Basedontheinherentstructureoflargemodels,aninnovativetwo-stepmethodis
+introduced: first,convertingnaturallanguagetoPython,thentranslatingPythontoSQL.
+Accuracyisfurtherenhancedbyiterativelyoptimizingdatabasesemanticsandsupple-
+mentingknowledge. Utilizingtheopen-sourceDeepSeekmodel,alongwiththeunique
+featuresofPythonandSQL,andmakingfulluseofpromptengineering,variousmodes
+were designed and iteratively refined, achieving significant improvements in NL2SQL
+accuracy. Specifically, EXimprovedbyatleast2.73%, F1byatleast3.72%, andVESby
+6.34%overexistingmethods,ultimatelyachievingstrongbusinessperformance. However,
+giventhehighdemandsofthefinancialindustry,currentaccuracylevelsarestillslightly
+insufficient,indicatingtheneedforfurtheroptimization. Duringexperimentation,itwas
+alsoobservedthattheindustry’shighlevelofexpertiseandextensivecorpuscouldsignifi-
+cantlybenefitNL2SQLaccuracythroughcontinuedcorpusexpansionandthecreationof
+industry-specificdatasets,areasforfutureworktofurtherrefineandenhanceperformance.
+AlthoughtheNL2PY2SQLmethodperformswellinnaturallanguagetoSQLconver-
+sion,itstillhassomelimitations,especiallyregardingscalabilityandapplicability. First,
+theNL2PY2SQLmethodreliesonPythonintermediaterepresentation,whichmaymake
+itfaceperformancebottleneckswhenprocessingcomplexordiversequeries. Forlarge
+databasesandhighlydynamicqueryscenarios,theintermediaterepresentationgenerated
+byPythonmaynotfullycapturecomplexgrammaticalstructuresordatadependencies,
+resultinginlimitedoptimizationspace. Inaddition,thecurrentmethodmayhavedifficulty
+adaptingtounstructurednaturallanguageinput,especiallyqueriescontainingfuzzyand
+ambiguouscontent. Futureresearchcanfocusonimprovingthemethod’sscalability,such
+asbyoptimizingPythonintermediaterepresentationgenerationandmoreaccurateSQL
+FutureInternet2025,17,12 23of24
+syntaxmapping,especiallyincomplexSQLscenariossuchasmulti-tablejoinsandnested
+queries. Inaddition,enhancingthecross-domainadaptabilityofthemethod,especially
+whenfacingdifferentdatabasesystemsandapplicationscenarios,canimprovethemodel’s
+generalizationabilitythroughbroadercorpusandpre-trainedmodels. Atthesametime,
+furthercombiningreinforcementlearningandautomatictuningmechanismsisexpectedto
+makethemethodmorerobustandflexibleinpracticalapplications.
+AuthorContributions:X.D.,S.H.andF.Z.wrotethemainmanuscripttext.C.W.andB.M.N.provided
+theideaandpreparedthedataandfigures.Allauthorsreviewedthemanuscript.Allauthorshave
+readandagreedtothepublishedversionofthemanuscript.
+Funding: TheworkofthispaperissupportedbytheNationalKeyResearchandDevelopment
+ProgramofChina(2019YFB1405000)andtheNationalNaturalScienceFoundationofChinaunder
+Grant(No.61873309,92046024,92146002).
+DataAvailabilityStatement:Thedatasetisfromhttps://bird-bench.github.io(accessed15July2024).
+ConflictsofInterest:AuthorChengWangwasemployedbythecompanyGienTechTechnologyCo.,
+Ltd.Theremainingauthorsdeclarethattheresearchwasconductedintheabsenceofanycommercial
+orfinancialrelationshipsthatcouldbeconstruedasapotentialconflictofinterest.
+References
+1. Liu,X.; Shen,S.; Li,B.; Ma,P.; Jiang,R.; Zhang,Y.; Fan,J.; Li,G.; Tang,N.; Luo,Y.; etal. ASurveyofNL2SQLwithLarge
+LanguageModels:Wherearewe,andwherearewegoing?arXiv2024,arXiv:2408.05109.
+2. Shi,L.;Tang,Z.;Zhang,N.;Zhang,X.;Yang,Z.ASurveyonEmployingLargeLanguageModelsforText-to-SQLTasks.arXiv
+2024,arXiv:2407.15186.
+3. Yavuz,S.;Gür,I.;Su,Y.;Yan,X.Whatittakestoachieve100%conditionaccuracyonWikiSQL.InProceedingsofthe2018Confer-
+enceonEmpiricalMethodsinNaturalLanguageProcessing,Brussels,Belgium,31October–4November2018;pp.1702–1711.
+4. Yu, T.; Zhang, R.; Yang, K.; Yasunaga, M.; Wang, D.; Li, Z.; Ma, J.; Li, I.; Yao, Q.; Roman, S.; et al. Spider: A large-scale
+human-labeleddatasetforcomplexandcross-domainsemanticparsingandtext-to-sqltask.arXiv2018,arXiv:1809.08887.
+5. Adewusi,A.O.;Okoli,U.I.;Adaga,E.;Olorunsogo,T.;Asuzu,O.F.;Daraojimba,D.O.Businessintelligenceintheeraofbigdata:
+Areviewofanalyticaltoolsandcompetitiveadvantage.Comput.Sci.ITRes.J.2024,5,415–431.[CrossRef]
+6. Katsogiannis-Meimarakis,G.;Koutrika,G.Asurveyondeeplearningapproachesfortext-to-SQL.VLDBJ.2023,32,905–936.
+[CrossRef]
+7. Li,F.;Jagadish,H.V.NaLIR:Aninteractivenaturallanguageinterfaceforqueryingrelationaldatabases.InProceedingsofthe
+2014ACMSIGMODInternationalConferenceonManagementofData,NewYork,NY,USA,22–27June2014;pp.709–712.
+8. Zhao,Y.;Jiang,J.;Hu,Y.;Lan,W.;Zhu,H.;Chauhan,A.;Li,A.;Pan,L.;Wang,J.;Hang,C.-W.;etal.Importanceofsynthesizing
+high-qualitydatafortext-to-sqlparsing.arXiv2022,arXiv:2212.08785.
+9. Vaswani,A.Attentionisallyouneed.AdvancesinNeuralInformationProcessingSystems.InProceedingsofthe31stConference
+onNeuralInformationProcessingSystems(NIPS2017),LongBeach,CA,USA,4–9December2017.
+10. Talaei,S.;Pourreza,M.;Chang,Y.C.;Mirhoseini,A.;Saberi,A.Chess:Contextualharnessingforefficientsqlsynthesis.arXiv2024,
+arXiv:2405.16755.
+11. Li,H.;Zhang,J.;Liu,H.;Fan,J.;Zhang,X.;Zhu,J.;Wei,R.;Pan,H.;Li,C.;Chen,H.Codes: Towardsbuildingopen-source
+languagemodelsfortext-to-sql.Proc.ACMManag.Data2024,2,1–28.[CrossRef]
+12. Pourreza, M.; Rafiei, D. Din-sql: Decomposed in-context learning of text-to-sql with self-correction. In Proceedings of the
+AdvancesinNeuralInformationProcessingSystems,Vancouver,BC,Canada,9–15December2024;Volume36.
+13. Caferog˘lu,H.A.;Ulusoy,Ö.E-SQL:DirectSchemaLinkingviaQuestionEnrichmentinText-to-SQL.arXiv2024,arXiv:2409.16751.
+14. Gu,Z.;Fan,J.;Tang,N.;Cao,L.;Jia,B.;Madden,S.;Du,X.Few-shottext-to-sqltranslationusingstructureandcontentprompt
+learning.Proc.ACMManag.Data2023,1,1–28.[CrossRef]
+15. Pourreza,M.;Li,H.;Sun,R.;Chung,Y.;Talaei,S.;Kakkar,G.T.;Gan,Y.;Saberi,A.;Ozcan,F.;Arik,S.O.CHASE-SQL:Multi-Path
+ReasoningandPreferenceOptimizedCandidateSelectioninText-to-SQL.arXiv2024,arXiv:2410.01943.
+16. Mao,W.;Wang,R.;Guo,J.;Zeng,J.;Gao,C.;Han,P.;Liu,C.EnhancingText-to-SQLParsingthroughQuestionRewritingand
+Execution-GuidedRefinement.InFindingsoftheAssociationforComputationalLinguisticsACL2024;AssociationforComputational
+Linguistics:NewBrunswick,NJ,USA,2024;pp.2009–2024.
+17. Hong,Z.;Yuan,Z.;Zhang,Q.;Chen,H.;Dong,J.;Huang,F.;Huang,X.Next-GenerationDatabaseInterfaces: ASurveyof
+LLM-basedText-to-SQL.arXiv2024,arXiv:2406.08426.
+FutureInternet2025,17,12 24of24
+18. Yang, J.; Hui, B.; Yang, M.; Yang, J.; Lin, J.; Zhou, C.Synthesizingtext-to-sqldatafromweakandstrongllms. arXiv2024,
+arXiv:2408.03256.
+19. Gao,D.;Wang,H.;Li,Y.;Sun,X.;Qian,Y.;Ding,B.;Zhou,J.Text-to-sqlempoweredbylargelanguagemodels:Abenchmark
+evaluation.arXiv2023,arXiv:2308.15363.[CrossRef]
+20. Yang,R.;Tan,T.F.;Lu,W.;Thirunavukarasu,A.J.;Ting,D.S.W.;Liu,N.Largelanguagemodelsinhealthcare: Development,
+applications,andchallenges.HealthCareSci.2023,2,255–263.[CrossRef]
+21. Pourreza,M.;Rafiei,D.Dts-sql:Decomposedtext-to-sqlwithsmalllargelanguagemodels.arXiv2024,arXiv:2402.01117.
+22. Jiang,J.;Wang,F.;Shen,J.;Kim,S.;Kim,S.ASurveyonLargeLanguageModelsforCodeGeneration.arXiv2024,arXiv:2406.00515.
+23. DeepSeek-AI,Q.Z.;Zhu,Q.;Guo,D.;Shao,Z.;Yang,D.;Wang,P.;Xu,R.;Wu,Y.;Li,Y.;Gao,H.;etal. DeepSeek-Coder-V2:
+BreakingtheBarrierofClosed-SourceModelsinCodeIntelligence.arXiv2024,arXiv:2406.11931.
+24. Wei,J.;Wang,X.;Schuurmans,D.;Bosma,M.;Xia,F.;Chi,E.;Le,Q.V.;Zhou,D.Chain-of-thoughtpromptingelicitsreasoningin
+largelanguagemodels.InProceedingsoftheAdvancesinNeuralInformationProcessingSystems,NewOrleans,LA,USA,28
+November–9December2022;pp.24824–24837.
+25. Wang,X.;Wei,J.;Schuurmans,D.;Le,Q.;Chi,E.;Narang,S.;Chowdhery,A.;Zhou,D.Self-consistencyimproveschainofthought
+reasoninginlanguagemodels.arXiv2022,arXiv:2203.11171.
+26. Yao,S.;Yu,D.;Zhao,J.;Shafran,I.;Griffiths,T.;Cao,Y.;Narasimhan,K.Treeofthoughts:Deliberateproblemsolvingwithlarge
+languagemodels. InProceedingsoftheAdvancesinNeuralInformationProcessingSystems,Vancouver,BC,Canada,9–15
+December2024;Volume36.
+27. Hao,S.;Gu,Y.;Ma,H.;Hong,J.J.;Wang,Z.;Wang,D.Z.;Hu,Z.Reasoningwithlanguagemodelisplanningwithworldmodel.
+arXiv2023,arXiv:2305.14992.
+28. Yao,S.;Zhao,J.;Yu,D.;Du,N.;Shafran,I.;Narasimhan,K.;Cao,Y.React:Synergizingreasoningandactinginlanguagemodels.
+arXiv2022,arXiv:2210.03629.
+29. Madaan, A.; Tandon, N.; Gupta, P.; Hallinan, S.; Gao, L.; Wiegreffe, S.; Alon, U.; Dziri, N.; Prabhumoye, S.; Yang, Y.; etal.
+Self-refine:Iterativerefinementwithself-feedback.InProceedingsoftheAdvancesinNeuralInformationProcessingSystems,
+Vancouver,BC,Canada,9–15December2024;Volume36.
+30. Shinn,N.;Cassano,F.;Gopinath,A.;Narasimhan,K.;Yao,S.Reflexion:Languageagentswithverbalreinforcementlearning.In
+ProceedingsoftheAdvancesinNeuralInformationProcessingSystems,Vancouver,BC,Canada,9–15December2024;Volume36.
+31. Zhou,A.;Yan,K.;Shlapentokh-Rothman,M.;Wang,H.;Wang,Y.X.Languageagenttreesearchunifiesreasoningactingand
+planninginlanguagemodels.arXiv2023,arXiv:2310.04406.
+32. Ghaemi,H.;Alizadehsani,Z.;Shahraki,A.;Corchado,J.M.Transformersinsourcecodegeneration:Acomprehensivesurvey.J.
+Syst.Archit.2024,153,103193.[CrossRef]
+33. Fu,Y.;Panda,R.;Niu,X.;Yue,X.;Hajishirzi,H.;Kim,Y.;Peng,H.Dataengineeringforscalinglanguagemodelsto128kcontext.
+arXiv2024,arXiv:2402.10171.
+Disclaimer/Publisher’sNote: Thestatements, opinionsanddatacontainedinallpublicationsaresolelythoseoftheindividual
+author(s)andcontributor(s)andnotofMDPIand/ortheeditor(s).MDPIand/ortheeditor(s)disclaimresponsibilityforanyinjuryto
+peopleorpropertyresultingfromanyideas,methods,instructionsorproductsreferredtointhecontent.

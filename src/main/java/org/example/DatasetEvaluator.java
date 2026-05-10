@@ -93,7 +93,11 @@ public class DatasetEvaluator {
                 int sqlTokens = 0;
                 if (!subSchema.isEmpty()) {
                     try {
+                        String sampleData = SchemaDataInjector.getSampleData(subSchema, sqlQuery);
                         String combinedInput = "【原始业务问题查询】\n" + question + "\n\n【NL2MQL 提取的 IR JSON】\n" + mqlText + "\n\n【过滤后的子 Schema (DDL)】\n" + subSchema;
+                        if (!sampleData.isEmpty()) {
+                            combinedInput += "\n\n【相关表的部分数据样例】\n" + sampleData;
+                        }
                         sqlResult = agent.getSqlResult(combinedInput);
                         sqlText = sqlResult.getOutput().getText();
                         sqlTokens = extractTokens(mapper, sqlResult);

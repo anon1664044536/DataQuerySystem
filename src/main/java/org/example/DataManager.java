@@ -66,6 +66,14 @@ public class DataManager {
         return get("SQL_NATSQL_APP_ID", "dashscope.sqlNatSQL-app-id", "");
     }
 
+    public static String mqlPYSQLAppId() {
+        return get("MQL_PYSQL_APP_ID", "dashscope.mqlPYSQL-app-id", "");
+    }
+
+    public static String sqlPYSQLAppId() {
+        return get("SQL_PYSQL_APP_ID", "dashscope.sqlPYSQL-app-id", "");
+    }
+
     public static String dbHost() {
         return get("DB_HOST", "db.host", "localhost");
     }
