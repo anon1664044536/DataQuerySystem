@@ -10,7 +10,11 @@ import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-lass SpiderEvaluator {
+/**
+ * 自动化评测引擎 (SpiderEvaluator)
+ * 对应论文 4.4 节：基于 ThreadPoolExecutor 的高并发评测调度模型
+ */
+public class SpiderEvaluator {
 
     private static final int START_QID = 402;
     private static final int END_QID = 501; 
@@ -162,7 +166,12 @@ lass SpiderEvaluator {
     private static int extractTokens(ObjectMapper mapper, ApplicationResult result) {
         if (result == null) return 0;
         try {
-            if (result.getUsage() != null) return result.getUsage().getTotalTokens();
+            JsonNode rootNode = mapper.readTree(mapper.writeValueAsString(result));
+            JsonNode usage = rootNode.path("usage");
+            if (usage.has("models")) {
+                JsonNode modelUsage = usage.path("models").get(0);
+                return modelUsage.path("inputTokens").asInt(0) + modelUsage.path("outputTokens").asInt(0);
+            }
         } catch (Exception ignored) {}
         return 0;
     }

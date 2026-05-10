@@ -31,9 +31,13 @@ public class MetricAspect {
             if (result instanceof ApplicationResult) {
                 ApplicationResult appResult = (ApplicationResult) result;
                 try {
-                    // 这里的解析逻辑可以根据具体的 SDK 结构微调
-                    if (appResult.getUsage() != null) {
-                        tokens = appResult.getUsage().getTotalTokens();
+                    // 使用 Jackson 兼容性更好
+                    com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                    com.fasterxml.jackson.databind.JsonNode rootNode = mapper.readTree(mapper.writeValueAsString(appResult));
+                    com.fasterxml.jackson.databind.JsonNode usage = rootNode.path("usage");
+                    if (usage.has("models")) {
+                        com.fasterxml.jackson.databind.JsonNode modelUsage = usage.path("models").get(0);
+                        tokens = modelUsage.path("inputTokens").asInt(0) + modelUsage.path("outputTokens").asInt(0);
                     }
                 } catch (Exception ignored) {
                 }
